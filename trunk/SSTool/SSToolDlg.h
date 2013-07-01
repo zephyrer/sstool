@@ -5,6 +5,7 @@
 #pragma once
 #include "afxwin.h"
 #include"resource.h"
+#include "afxcmn.h"
 typedef enum
 {
 	COM1=0,
@@ -49,4 +50,5 @@ public:
 	afx_msg void OnBnClickedButtonDisconn();
 	CEdit m_ctlMsgOut;
 	afx_msg void OnBnClickedButtonClear();
+	CTabCtrl m_TabItem;
 };
