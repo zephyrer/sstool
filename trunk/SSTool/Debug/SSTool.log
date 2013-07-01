@@ -1,25 +1,22 @@
-﻿Build started 2013/6/26 22:02:22.
-     1>Project "D:\BaiduCloud\SSTool\SSTool\SSTool.vcxproj" on node 2 (build target(s)).
+﻿Build started 2013/7/1 23:42:00.
+     1>Project "E:\study\vcProject\SSTool\SSTool\SSTool.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\SSTool.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         d:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"Debug\SSTool.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
-         stdafx.cpp
-         d:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\SSTool.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ConnPort.cpp SSTool.cpp SSToolDlg.cpp
+         All outputs are up-to-date.
+         d:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\SSTool.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ConnPort.cpp SSToolDlg.cpp
          SSToolDlg.cpp
-         SSTool.cpp
          ConnPort.cpp
-     1>d:\baiducloud\sstool\sstool\connport.cpp(239): warning C4101: 'dwWritten' : unreferenced local variable
-     1>d:\baiducloud\sstool\sstool\connport.cpp(274): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(253): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
-     1>d:\baiducloud\sstool\sstool\connport.cpp(266): warning C4101: 'szFind' : unreferenced local variable
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(274): warning C4101: 'dwWritten' : unreferenced local variable
          Generating Code...
        ResourceCompile:
-         C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /l"0x0409" /IDebug\ /nologo /fo"Debug\SSTool.res" SSTool.rc 
+         All outputs are up-to-date.
        ManifestResourceCompile:
-         C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\SSTool.exe.embed.manifest.res" Debug\SSTool_manifest.rc 
+         All outputs are up-to-date.
        Link:
-         d:\Program Files\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\BaiduCloud\SSTool\Debug\SSTool.exe" /INCREMENTAL /NOLOGO /MANIFEST /ManifestFile:"Debug\SSTool.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"D:\BaiduCloud\SSTool\Debug\SSTool.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\BaiduCloud\SSTool\Debug\SSTool.lib" /MACHINE:X86 Debug\SSTool.res
+         d:\Program Files\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\study\vcProject\SSTool\Debug\SSTool.exe" /INCREMENTAL /NOLOGO /MANIFEST /ManifestFile:"Debug\SSTool.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"E:\study\vcProject\SSTool\Debug\SSTool.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\study\vcProject\SSTool\Debug\SSTool.lib" /MACHINE:X86 Debug\SSTool.res
          Debug\SSTool.exe.embed.manifest.res
          Debug\ConnPort.obj
          Debug\SSTool.obj
@@ -30,12 +27,12 @@
          All outputs are up-to-date.
        LinkEmbedManifest:
          All outputs are up-to-date.
-         SSTool.vcxproj -> D:\BaiduCloud\SSTool\Debug\SSTool.exe
+         SSTool.vcxproj -> E:\study\vcProject\SSTool\Debug\SSTool.exe
        FinalizeBuildStatus:
          Deleting file "Debug\SSTool.unsuccessfulbuild".
          Touching "Debug\SSTool.lastbuildstate".
-     1>Done Building Project "D:\BaiduCloud\SSTool\SSTool\SSTool.vcxproj" (build target(s)).
+     1>Done Building Project "E:\study\vcProject\SSTool\SSTool\SSTool.vcxproj" (build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:20.35
+Time Elapsed 00:00:18.67

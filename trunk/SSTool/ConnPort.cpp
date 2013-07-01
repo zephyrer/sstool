@@ -10,6 +10,7 @@ static		int			g_bWriteProcExit=0;
 static		int			g_bReadProcExit=0;
 static		HANDLE		g_hReadExit;
 static		HANDLE		g_hWriteExit;
+static		HANDLE		g_hPareData;
 
 static		BYTE		g_DataBuf[MAX_BUFFER_SIZE];
 static      int			g_iInPos=0;
@@ -129,6 +130,7 @@ BOOL ConnPort::ClosePort()
 BOOL ConnPort::OpenPort(TCHAR *szPort)
 {
 	 DWORD dwThreadID=0;
+	 g_iExitFlag=0;
 	 m_hPort=CreateFile(szPort,
 						GENERIC_READ|GENERIC_WRITE,
 						0,
@@ -155,9 +157,9 @@ BOOL ConnPort::OpenPort(TCHAR *szPort)
  
   //创建读写线程
    m_hThreadRead  = CreateThread(0,0,(LPTHREAD_START_ROUTINE)ReadThreadProc, (void*)this,0,&dwThreadID);
-   printf("ReadThread ID=%x",dwThreadID);
    m_hThreadWrite = CreateThread(0,0,(LPTHREAD_START_ROUTINE)WriteThreadProc,(void*)this,0,&dwThreadID);
-   printf("WriteThread ID=%x",dwThreadID);
+   m_hDataParse = CreateThread(0,0,(LPTHREAD_START_ROUTINE)PareDataProc,(void*)this,0,&dwThreadID);
+
 
    g_hWriteExit = CreateEvent( 
         NULL,               
@@ -171,13 +173,19 @@ BOOL ConnPort::OpenPort(TCHAR *szPort)
         FALSE,             
         TEXT("ReadEvent")
         );
-	 if (g_hReadExit == NULL||g_hWriteExit==NULL) 
+	g_hPareData = CreateEvent( 
+        NULL,              
+        TRUE,               
+        FALSE,             
+        TEXT("ParseEvent")
+        );
+	 if (g_hReadExit == NULL||g_hWriteExit==NULL||g_hPareData==NULL) 
     { 
-        printf("CreateEvent failed (%d)\n", GetLastError());
+        printf("CreateEvent failed (%d)\n",GetLastError());
         return FALSE;
     }
-   g_iExitFlag=0;
-   if(INVALID_HANDLE_VALUE==m_hThreadRead || INVALID_HANDLE_VALUE==m_hThreadWrite) 
+   if(INVALID_HANDLE_VALUE==m_hThreadRead || INVALID_HANDLE_VALUE==m_hThreadWrite
+	   ||INVALID_HANDLE_VALUE==m_hDataParse) 
    {   
        wprintf(TEXT("Create read or write thread failed...\r\n"));
        return FALSE;
@@ -213,18 +221,17 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
         {
 			ClearCommError(pThis->m_hPort,&dwErrFlag,&comStat);
 			dwLength=comStat.cbInQue;
-			if(dwLength>0)
+			while(dwLength>0)
 			{
 				//读数据
-				BOOL bRet=ReadFile(pThis->m_hPort,szRev,dwLength,&dwLength,NULL);
+				if(g_iInPos==g_iOutPos) Sleep(20);
+				BOOL bRet=ReadFile(pThis->m_hPort,g_DataBuf+g_iInPos,1,NULL,NULL);
 				if(!bRet) 
 				{
-					MessageBox(NULL,TEXT("Read Error"),TEXT("Error"),MB_OK);
+					continue;
 				}
-				else
-				{
-					pThis->ParseComData(szRev,dwLength);
-				}
+				g_iInPos=(g_iInPos++)%MAX_BUFFER_SIZE;
+				dwLength--;
 			}
         } 
         GetCommModemStatus(pThis->m_hPort,&dwModemStat);
@@ -232,6 +239,34 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
     }
 	g_bReadProcExit=1;
     return 0;
+}
+
+DWORD ConnPort::PareDataProc(LPVOID p)
+{
+	int		iReadCount=0;
+	char	szTmp;
+	char	szRev[MAX_BUFFER_SIZE/2];
+	ConnPort *pThis=(ConnPort *)p;
+	memset(szRev,0,MAX_BUFFER_SIZE/2);
+	while(1)
+	{
+		sprintf(&szTmp,"%c",g_DataBuf[g_iOutPos++]);
+		if(g_iOutPos==g_iInPos) Sleep(10);
+		if(szTmp=='\n')
+		{
+			szRev[iReadCount++]='\n';
+			pThis->SendComData(szRev);
+			iReadCount=0;
+			g_iOutPos++;
+			memset(szRev,0,MAX_BUFFER_SIZE/2);
+		}
+		else
+		{
+			szRev[iReadCount++]=szTmp;
+		}
+		
+	}
+	return 0;
 }
 DWORD ConnPort::WriteThreadProc( LPVOID p )
 {
@@ -259,36 +294,13 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
   return 0;
 }
 //解析串口数据
-void ConnPort::ParseComData(BYTE *byteRev,int iLen)
+void ConnPort::SendComData(char *szRevData)
 {
-		int				iCount=0;
-		int				iLRCount=0;
-        char            *szFind;
-		char			szRev[512]={0};
-		char			szTmp[512]={0};
-		TCHAR			m_revData[512]={0};
-        CString         strMsg;
+		CString         strMsg;
+		TCHAR			m_revData[MAX_BUFFER_SIZE/2];
         CSSToolDlg		*dlg=(CSSToolDlg *)AfxGetApp()->GetMainWnd();
-        
-		//sprintf(szRev,"%s",byteRev);
-		sprintf(szTmp,"%s",byteRev);
-#if 1
-		while(iCount<iLen)
-		{
-			if(szTmp[iCount]=='\n')
-			{
-				szRev[iCount]='\r';
-				szRev[iCount+1]='\n';
-				iLRCount++;
-			}
-			else
-			{
-				szRev[iCount+iLRCount]=szTmp[iCount];
-			}
-			iCount++;
-		}
-#endif
-		MultiByteToWideChar(CP_ACP,0,szRev,-1,m_revData,512);
+        memset(m_revData,0,MAX_BUFFER_SIZE/2);
+		MultiByteToWideChar(CP_ACP,0,szRevData,-1,m_revData,MAX_BUFFER_SIZE/2);
 		strMsg=m_revData;
         if(!strMsg.IsEmpty())
         {
