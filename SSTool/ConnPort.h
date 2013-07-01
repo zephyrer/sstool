@@ -18,10 +18,11 @@ protected:
 	CRITICAL_SECTION m_csRead;
 	CRITICAL_SECTION m_csWrite;
 
-	BOOL ConfigPort();
-	BOOL CommTimeouts();
-	void ParseComData( BYTE *byteRev,int iLen);
+	BOOL   ConfigPort();
+	BOOL   CommTimeouts();
+	void   SendComData(char *szRevData);
 	static DWORD  ReadThreadProc(LPVOID lpParameter);
 	static DWORD  WriteThreadProc(LPVOID lpParameter);
+	static DWORD  PareDataProc(LPVOID lpParameter);
 };
 
