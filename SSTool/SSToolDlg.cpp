@@ -70,6 +70,7 @@ void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COMBO_COMLIST, m_ctrComList);
 	DDX_Control(pDX, IDC_EDIT_MSG_OUT, m_ctlMsgOut);
+	DDX_Control(pDX, IDC_TAB1, m_TabItem);
 }
 
 BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
@@ -125,6 +126,12 @@ BOOL CSSToolDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	InitCommList();
+	/*Init Tab control item parameter*/
+	m_TabItem.InsertItem(0,L"Picture");
+	m_TabItem.InsertItem(1,L"Sound");
+	m_TabItem.InsertItem(2,L"System");
+	/*Init Tab control item parameter*/
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
