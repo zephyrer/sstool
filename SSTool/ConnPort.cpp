@@ -198,14 +198,16 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
     COMSTAT comStat;
     DWORD   dwErrFlag;
     DWORD   dwLength;
+	DWORD   dwRead;
     DWORD   dwModemStat;
     ConnPort *pThis=(ConnPort *)p;
-	BYTE    szRev[512]={0};
+	BYTE    RXBuffer;
   
     if(INVALID_HANDLE_VALUE==pThis->m_hPort)
     {
         AfxMessageBox(L"the port is not opened!");
     }
+	memset(g_DataBuf,0,MAX_BUFFER_SIZE);
     while(1)
     {
 		#if 0
@@ -225,12 +227,13 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 			{
 				//¶ÁÊý¾Ý
 				if(g_iInPos==g_iOutPos) Sleep(20);
-				BOOL bRet=ReadFile(pThis->m_hPort,g_DataBuf+g_iInPos,1,NULL,NULL);
-				if(!bRet) 
+				BOOL bRet=ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,NULL);
+				if(!bRet||0==RXBuffer) 
 				{
 					continue;
 				}
-				g_iInPos=(g_iInPos++)%MAX_BUFFER_SIZE;
+				g_DataBuf[g_iInPos]=RXBuffer;
+				g_iInPos=((g_iInPos++)%MAX_BUFFER_SIZE);
 				dwLength--;
 			}
         } 
@@ -245,24 +248,27 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 {
 	int		iReadCount=0;
 	char	szTmp;
-	char	szRev[MAX_BUFFER_SIZE/2];
+	char	szRev[MAX_BUFFER_SIZE];
 	ConnPort *pThis=(ConnPort *)p;
-	memset(szRev,0,MAX_BUFFER_SIZE/2);
+	memset(szRev,0,MAX_BUFFER_SIZE);
 	while(1)
 	{
-		sprintf(&szTmp,"%c",g_DataBuf[g_iOutPos++]);
 		if(g_iOutPos==g_iInPos) Sleep(10);
+		sprintf(&szTmp,"%c",g_DataBuf[g_iOutPos]);
 		if(szTmp=='\n')
 		{
 			szRev[iReadCount++]='\n';
 			pThis->SendComData(szRev);
 			iReadCount=0;
-			g_iOutPos++;
-			memset(szRev,0,MAX_BUFFER_SIZE/2);
+			g_DataBuf[g_iOutPos]=0;
+			g_iOutPos=((g_iOutPos++)%MAX_BUFFER_SIZE);
+			memset(szRev,0,MAX_BUFFER_SIZE);
 		}
-		else
+		else if(szTmp!=0)
 		{
 			szRev[iReadCount++]=szTmp;
+			g_DataBuf[g_iOutPos]=0;
+			g_iOutPos=((g_iOutPos++)%MAX_BUFFER_SIZE);
 		}
 		
 	}
@@ -297,10 +303,10 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 void ConnPort::SendComData(char *szRevData)
 {
 		CString         strMsg;
-		TCHAR			m_revData[MAX_BUFFER_SIZE/2];
+		TCHAR			m_revData[MAX_BUFFER_SIZE];
         CSSToolDlg		*dlg=(CSSToolDlg *)AfxGetApp()->GetMainWnd();
-        memset(m_revData,0,MAX_BUFFER_SIZE/2);
-		MultiByteToWideChar(CP_ACP,0,szRevData,-1,m_revData,MAX_BUFFER_SIZE/2);
+        memset(m_revData,0,MAX_BUFFER_SIZE);
+		MultiByteToWideChar(CP_ACP,0,szRevData,-1,m_revData,MAX_BUFFER_SIZE);
 		strMsg=m_revData;
         if(!strMsg.IsEmpty())
         {
