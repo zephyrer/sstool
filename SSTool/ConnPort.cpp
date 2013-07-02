@@ -6,11 +6,9 @@
 #define     MAX_BUFFER_SIZE   512
 
 volatile	int			g_iExitFlag=0;
-static		int			g_bWriteProcExit=0;
-static		int			g_bReadProcExit=0;
-static		HANDLE		g_hReadExit;
-static		HANDLE		g_hWriteExit;
-static		HANDLE		g_hPareData;
+static		int			g_wExitFlag=0;
+static		int			g_rExitFlag=0;
+static		int			g_pExitFlag=0;
 
 static		BYTE		g_DataBuf[MAX_BUFFER_SIZE];
 static      int			g_iInPos=0;
@@ -74,7 +72,6 @@ BOOL ConnPort::CommTimeouts()
     commTimeOut.WriteTotalTimeoutConstant=2000;
     commTimeOut.WriteTotalTimeoutMultiplier=50;
 
-
     if(!SetCommTimeouts(m_hPort,&commTimeOut)) 
     {
         return FALSE;
@@ -82,34 +79,26 @@ BOOL ConnPort::CommTimeouts()
     return TRUE;
     
 }
-
 BOOL ConnPort::ClosePort()
 {
-	SetEvent(g_hReadExit);
-	SetEvent(g_hWriteExit);
-	//wait thread to exit..
-#if 0
+	g_iExitFlag=1;
+	
 	while(1)
 	{
 		static int iTimeoutCount=0;
-		if(1==g_bWriteProcExit &&1==g_bReadProcExit)
-			break;
-		/*
-		if(30==iTimeoutCount)
+		Sleep(30);	
+		if(50==iTimeoutCount)
 		{
 			TerminateThread(m_hThreadRead,0);
 			TerminateThread(m_hThreadWrite,0);
+			TerminateThread(m_hDataParse,0);
 			break;
 		}
+		else if(1==g_rExitFlag && 1==g_wExitFlag && 1==g_pExitFlag)
+			break;
 		else
-			iTimeoutCount++;
-		 */
-		Sleep(100);		
+			iTimeoutCount++;	
 	}
-#endif
-	TerminateThread(m_hDataParse,0);
-	TerminateThread(m_hThreadRead,0);
-	TerminateThread(m_hThreadWrite,0);
     EscapeCommFunction(m_hPort,CLRRTS);
     EscapeCommFunction(m_hPort,CLRDTR);
     DeleteCriticalSection(&m_csRead);
@@ -119,10 +108,12 @@ BOOL ConnPort::ClosePort()
 	if(NULL==m_hPort)return FALSE;
 	if(NULL==m_hThreadRead)return FALSE;
 	if(NULL==m_hThreadWrite)return FALSE;
+	if(NULL==m_hDataParse)return FALSE;
 
     if(!CloseHandle(m_hPort))return FALSE;
     if(!CloseHandle(m_hThreadRead))return FALSE;
     if(!CloseHandle(m_hThreadWrite))return FALSE;
+	if(!CloseHandle(m_hDataParse))return FALSE;
 
     return TRUE;
 }
@@ -136,7 +127,7 @@ BOOL ConnPort::OpenPort(TCHAR *szPort)
 						0,
 						NULL,
 						OPEN_EXISTING,
-						0,
+						0/*FILE_FLAG_OVERLAPPED*/,
 						NULL);
     if(!m_hPort) 
     {
@@ -151,7 +142,6 @@ BOOL ConnPort::OpenPort(TCHAR *szPort)
    //刷新缓冲区信息->输入、输出缓冲区
    PurgeComm(m_hPort,PURGE_TXCLEAR|PURGE_RXCLEAR);
 
-
    if(!ConfigPort()) return FALSE;
    if(!CommTimeouts())return FALSE;
  
@@ -160,47 +150,17 @@ BOOL ConnPort::OpenPort(TCHAR *szPort)
    m_hThreadWrite = CreateThread(0,0,(LPTHREAD_START_ROUTINE)WriteThreadProc,(void*)this,0,&dwThreadID);
    m_hDataParse = CreateThread(0,0,(LPTHREAD_START_ROUTINE)PareDataProc,(void*)this,0,&dwThreadID);
 
-
-   g_hWriteExit = CreateEvent( 
-        NULL,               
-        TRUE,              
-        FALSE,              
-        TEXT("WriteEvent")
-        );
-	g_hReadExit = CreateEvent( 
-        NULL,              
-        TRUE,               
-        FALSE,             
-        TEXT("ReadEvent")
-        );
-	g_hPareData = CreateEvent( 
-        NULL,              
-        TRUE,               
-        FALSE,             
-        TEXT("ParseEvent")
-        );
-	 if (g_hReadExit == NULL||g_hWriteExit==NULL||g_hPareData==NULL) 
-    { 
-        printf("CreateEvent failed (%d)\n",GetLastError());
-        return FALSE;
-    }
-   if(INVALID_HANDLE_VALUE==m_hThreadRead || INVALID_HANDLE_VALUE==m_hThreadWrite
-	   ||INVALID_HANDLE_VALUE==m_hDataParse) 
-   {   
-       wprintf(TEXT("Create read or write thread failed...\r\n"));
-       return FALSE;
-   }
    return TRUE;
 
 }
 DWORD ConnPort::ReadThreadProc(LPVOID p)
 {
-    COMSTAT comStat;
-    DWORD   dwErrFlag;
-    DWORD   dwLength;
-	DWORD   dwRead;
-    DWORD   dwModemStat;
-    ConnPort *pThis=(ConnPort *)p;
+    COMSTAT		comStat;
+    DWORD		dwErrFlag;
+    DWORD		dwLength;
+	DWORD		dwRead;
+    DWORD		dwModemStat;
+    ConnPort	*pThis=(ConnPort *)p;
 	BYTE    RXBuffer;
   
     if(INVALID_HANDLE_VALUE==pThis->m_hPort)
@@ -210,49 +170,49 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 	memset(g_DataBuf,0,MAX_BUFFER_SIZE);
     while(1)
     {
-		#if 0
-		if(WAIT_OBJECT_0==WaitForSingleObject(g_hReadExit,1000))
+		if(1==g_iExitFlag)
 		{
-			ResetEvent(g_hReadExit);
 			break;
 		}
-		#endif
-        WaitCommEvent(pThis->m_hPort,&dwModemStat,NULL);
-        EnterCriticalSection(&pThis->m_csRead);
-        if(dwModemStat&EV_RXCHAR)
-        {
-			ClearCommError(pThis->m_hPort,&dwErrFlag,&comStat);
-			dwLength=comStat.cbInQue;
-			while(dwLength>0)
+		if(1)
+		{
+			if(1)
 			{
-				//读数据
-				if(g_iInPos==g_iOutPos) Sleep(20);
-				BOOL bRet=ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,NULL);
-				if(!bRet||0==RXBuffer) 
+				ClearCommError(pThis->m_hPort,&dwErrFlag,&comStat);
+				EnterCriticalSection(&pThis->m_csRead);
+				dwLength=comStat.cbInQue;
+				while(dwLength>0)
 				{
-					continue;
+					//读数据
+					if(g_iInPos==g_iOutPos) Sleep(20);
+					BOOL bRet=ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,NULL/*&m_overlapRead*/);
+					if(!bRet||0==dwLength) 
+					{
+						continue;
+					}
+					g_DataBuf[g_iInPos]=RXBuffer;
+					g_iInPos=((g_iInPos++)%MAX_BUFFER_SIZE);
+					dwLength--;
 				}
-				g_DataBuf[g_iInPos]=RXBuffer;
-				g_iInPos=((g_iInPos++)%MAX_BUFFER_SIZE);
-				dwLength--;
-			}
-        } 
-        GetCommModemStatus(pThis->m_hPort,&dwModemStat);
-        LeaveCriticalSection(&pThis->m_csRead);
-    }
-	g_bReadProcExit=1;
+			} 
+			GetCommModemStatus(pThis->m_hPort,&dwModemStat);
+			LeaveCriticalSection(&pThis->m_csRead);
+		}
+	}
+	g_rExitFlag=1;
     return 0;
 }
 
 DWORD ConnPort::PareDataProc(LPVOID p)
 {
 	int		iReadCount=0;
-	char	szTmp;
+	static char	szTmp;
 	char	szRev[MAX_BUFFER_SIZE];
 	ConnPort *pThis=(ConnPort *)p;
 	memset(szRev,0,MAX_BUFFER_SIZE);
 	while(1)
 	{
+		if(1==g_iExitFlag) break;
 		if(g_iOutPos==g_iInPos) Sleep(10);
 		sprintf(&szTmp,"%c",g_DataBuf[g_iOutPos]);
 		if(szTmp=='\n')
@@ -269,10 +229,10 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 			szRev[iReadCount++]=szTmp;
 			g_DataBuf[g_iOutPos]=0;
 			g_iOutPos=((g_iOutPos++)%MAX_BUFFER_SIZE);
-		}
-		
+		}	
 	}
-	return 0;
+	g_pExitFlag=1;
+	return 1;
 }
 DWORD ConnPort::WriteThreadProc( LPVOID p )
 {
@@ -282,8 +242,7 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 
     while(TRUE)
     {
-	 if(WAIT_OBJECT_0==WaitForSingleObject(g_hWriteExit,1000))
-			break;
+	 if(1==g_iExitFlag) break;
 	 #if 0
      //WaitForSingleObject(g_hEvent[hWrite],INFINITE);
      EnterCriticalSection(&pThis->m_csWrite);
@@ -296,10 +255,9 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
      LeaveCriticalSection(&pThis->m_csWrite);
 	#endif
     }
-  g_bWriteProcExit=1;
+  g_wExitFlag=1;
   return 0;
 }
-//解析串口数据
 void ConnPort::SendComData(char *szRevData)
 {
 		CString         strMsg;
