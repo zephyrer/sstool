@@ -1,9 +1,36 @@
-﻿Build started 2013/7/2 13:50:40.
-     1>Project "E:\study\VCProject\sstool\SSTool\SSTool.vcxproj" on node 2 (clean target(s)).
-     1>_PrepareForClean:
-         Deleting file "Debug\SSTool.lastbuildstate".
-     1>Done Building Project "E:\study\VCProject\sstool\SSTool\SSTool.vcxproj" (clean target(s)).
+﻿Build started 2013/7/2 17:25:54.
+     1>Project "E:\study\VCProject\sstool\SSTool\SSTool.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\SSTool.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         All outputs are up-to-date.
+         D:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\SSTool.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ConnPort.cpp
+         ConnPort.cpp
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(248): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(270): warning C4101: 'dwWritten' : unreferenced local variable
+       ResourceCompile:
+         All outputs are up-to-date.
+       ManifestResourceCompile:
+         All outputs are up-to-date.
+       Link:
+         D:\Program Files\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\study\VCProject\SSTool\Debug\SSTool.exe" /INCREMENTAL /NOLOGO /MANIFEST /ManifestFile:"Debug\SSTool.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"E:\study\VCProject\SSTool\Debug\SSTool.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\study\VCProject\SSTool\Debug\SSTool.lib" /MACHINE:X86 Debug\SSTool.res
+         Debug\SSTool.exe.embed.manifest.res
+         Debug\ConnPort.obj
+         Debug\SSTool.obj
+         Debug\SSToolDlg.obj
+         Debug\stdafx.obj
+       Manifest:
+         C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\SSTool.exe.embed.manifest" /manifest Debug\SSTool.exe.intermediate.manifest "D:\Program Files\Microsoft Visual Studio 10.0\VC\Include\Manifest\dpiaware.manifest"
+         All outputs are up-to-date.
+       LinkEmbedManifest:
+         All outputs are up-to-date.
+         SSTool.vcxproj -> E:\study\VCProject\SSTool\Debug\SSTool.exe
+       FinalizeBuildStatus:
+         Deleting file "Debug\SSTool.unsuccessfulbuild".
+         Touching "Debug\SSTool.lastbuildstate".
+     1>Done Building Project "E:\study\VCProject\sstool\SSTool\SSTool.vcxproj" (build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.16
+Time Elapsed 00:00:00.67
