@@ -16,9 +16,6 @@ static		int			g_iOutPos=0;
 
 ConnPort::ConnPort(void)
 {
-	m_hPort=NULL;
-	InitializeCriticalSection(&m_csRead);
-	InitializeCriticalSection(&m_csWrite);
 }
 
 ConnPort::~ConnPort(void)
@@ -122,6 +119,8 @@ BOOL ConnPort::OpenPort(TCHAR *szPort)
 {
 	 DWORD dwThreadID=0;
 	 g_iExitFlag=0;
+	 m_hPort=NULL;
+	
 	 m_hPort=CreateFile(szPort,
 						GENERIC_READ|GENERIC_WRITE,
 						0,
@@ -144,7 +143,9 @@ BOOL ConnPort::OpenPort(TCHAR *szPort)
 
    if(!ConfigPort()) return FALSE;
    if(!CommTimeouts())return FALSE;
- 
+
+   InitializeCriticalSection(&m_csRead);
+   InitializeCriticalSection(&m_csWrite);
   //创建读写线程
    m_hThreadRead  = CreateThread(0,0,(LPTHREAD_START_ROUTINE)ReadThreadProc, (void*)this,0,&dwThreadID);
    m_hThreadWrite = CreateThread(0,0,(LPTHREAD_START_ROUTINE)WriteThreadProc,(void*)this,0,&dwThreadID);
@@ -168,6 +169,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
         AfxMessageBox(L"the port is not opened!");
     }
 	memset(g_DataBuf,0,MAX_BUFFER_SIZE);
+	memset(&comStat,0,sizeof(COMSTAT));
     while(1)
     {
 		if(1==g_iExitFlag)
@@ -176,16 +178,14 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 		}
 		if(1)
 		{
-			if(1)
-			{
 				ClearCommError(pThis->m_hPort,&dwErrFlag,&comStat);
-				EnterCriticalSection(&pThis->m_csRead);
 				dwLength=comStat.cbInQue;
+				EnterCriticalSection(&pThis->m_csRead);
 				while(dwLength>0)
 				{
 					//读数据
 					if(g_iInPos==g_iOutPos) Sleep(20);
-					BOOL bRet=ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,NULL/*&m_overlapRead*/);
+					BOOL bRet=ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,NULL);
 					if(!bRet||0==dwLength) 
 					{
 						continue;
@@ -194,9 +194,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 					g_iInPos=((g_iInPos++)%MAX_BUFFER_SIZE);
 					dwLength--;
 				}
-			} 
-			GetCommModemStatus(pThis->m_hPort,&dwModemStat);
-			LeaveCriticalSection(&pThis->m_csRead);
+				LeaveCriticalSection(&pThis->m_csRead);
 		}
 	}
 	g_rExitFlag=1;
