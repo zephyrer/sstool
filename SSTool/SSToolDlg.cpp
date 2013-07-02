@@ -189,7 +189,8 @@ void  CSSToolDlg::OutMsg(CString strMsg)
 	if(m_ctlMsgOut.GetLineCount()>400)
 	{
 		m_RecieveData.Empty();
-		UpdateData(FALSE);
+		m_ctlMsgOut.SetSel(0,-1);
+		m_ctlMsgOut.ReplaceSel(L" ");
 	}
 	iLen=m_ctlMsgOut.GetWindowTextLengthW();
 	m_ctlMsgOut.SetSel(iLen,iLen);
@@ -213,8 +214,6 @@ void CSSToolDlg::OnBnClickedButtonDisconn()
 	else
 		MessageBox(L"Error to disconnect!");
 }
-
-
 void CSSToolDlg::OnBnClickedButtonClear()
 {
 	m_RecieveData.Empty();
