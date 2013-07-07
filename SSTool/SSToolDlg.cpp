@@ -25,6 +25,45 @@ TCHAR *strConn[]=
 	L"COM8",
 	L"COM9",
 };
+
+TCHAR *strBaudRate[]=
+{
+	L"110",
+	L"300",
+	L"600",
+	L"1200",
+	L"2400",
+	L"4800",
+	L"9600",
+	L"14400",
+	L"19200",
+	L"38400",
+	L"57600",
+	L"115200",
+	L"128000",
+	L"256000",
+};
+TCHAR *strStopBits[]=
+{
+	L"1",
+	L"1.5",
+	L"2",
+};
+
+TCHAR *strDataBits[]=
+{
+	L"6",
+	L"7",
+	L"8",
+};
+TCHAR *strParity[]=
+{
+	L"NONE",
+	L"ODD",
+	L"EVEN",
+	L"MARK",
+	L"SPACE",
+};
 ConnPort  m_conn;
 // CAboutDlg dialog used for App About
 
@@ -71,6 +110,10 @@ void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_COMLIST, m_ctrComList);
 	DDX_Control(pDX, IDC_EDIT_MSG_OUT, m_ctlMsgOut);
 	DDX_Control(pDX, IDC_TAB1, m_TabItem);
+	DDX_Control(pDX, IDC_COMBO_BAUDRATE, m_cbBaudrate);
+	DDX_Control(pDX, IDC_COMBO_STOPBITS, m_cbStopBits);
+	DDX_Control(pDX, IDC_COMBO_DATABITS, m_cbDataBits);
+	DDX_Control(pDX, IDC_COMBO_PARITY, m_cbParity);
 }
 
 BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
@@ -85,7 +128,7 @@ END_MESSAGE_MAP()
 
 // CSSToolDlg message handlers
 
-void CSSToolDlg::InitCommList()
+void CSSToolDlg::InitCommParams()
 {
 	int iLen=sizeof(strConn)/sizeof(strConn[0]);
 
@@ -95,6 +138,33 @@ void CSSToolDlg::InitCommList()
 	}
 	m_ctrComList.SetCurSel(COM1);
 
+	iLen=sizeof(strBaudRate)/sizeof(strBaudRate[0]);
+	for(int i=0;i<iLen;i++)
+	{
+		m_cbBaudrate.AddString(strBaudRate[i]);
+	}
+	m_cbBaudrate.SetCurSel(BAUD115200);
+
+	iLen=sizeof(strStopBits)/sizeof(strStopBits[0]);
+	for(int i=0;i<iLen;i++)
+	{
+		m_cbStopBits.AddString(strStopBits[i]);
+	}
+	m_cbStopBits.SetCurSel(ONESTOPBIT);
+
+	iLen=sizeof(strDataBits)/sizeof(strDataBits[0]);
+	for(int i=0;i<iLen;i++)
+	{
+		m_cbDataBits.AddString(strDataBits[i]);
+	}
+	m_cbDataBits.SetCurSel(DATABIT8);
+	
+	iLen=sizeof(strParity)/sizeof(strParity[0]);
+	for(int i=0;i<iLen;i++)
+	{
+		m_cbParity.AddString(strParity[i]);
+	}
+	m_cbParity.SetCurSel(NOPARITY);	
 }
 BOOL CSSToolDlg::OnInitDialog()
 {
@@ -125,7 +195,7 @@ BOOL CSSToolDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	InitCommList();
+	InitCommParams();
 	/*Init Tab control item parameter*/
 	m_TabItem.InsertItem(0,L"Picture");
 	m_TabItem.InsertItem(1,L"Sound");
@@ -202,7 +272,12 @@ void  CSSToolDlg::OutMsg(CString strMsg)
 void CSSToolDlg::OnBnClickedButtonCon()
 {
 	m_iCurConn=m_ctrComList.GetCurSel();
-	if(m_conn.OpenPort(strConn[m_iCurConn]))
+	m_iCurBaudrate=m_cbBaudrate.GetCurSel();
+	m_iCurDataBits=m_cbDataBits.GetCurSel();
+	m_iCurStopBits=m_cbStopBits.GetCurSel();
+	m_iCurParity=m_cbParity.GetCurSel();
+
+	if(m_conn.OpenPort(strConn[m_iCurConn],m_iCurBaudrate,m_iCurParity,m_iCurDataBits,m_iCurStopBits))
 		MessageBox(L"Connect Success!");
 	else
 		MessageBox(L"Connect Failed!");
