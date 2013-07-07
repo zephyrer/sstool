@@ -6,7 +6,7 @@ public:
 	ConnPort(void);
 	~ConnPort(void);
 	BOOL ClosePort();
-	BOOL OpenPort(TCHAR *szPort);
+	BOOL OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int iStopBits);
 
 protected:
 	TCHAR m_WrriteBuffer[512];
@@ -18,7 +18,7 @@ protected:
 	CRITICAL_SECTION m_csRead;
 	CRITICAL_SECTION m_csWrite;
 
-	BOOL   ConfigPort();
+	BOOL   ConfigPort(int iBaudrate,int iParity,int iDataBits,int iStopBits);
 	BOOL   CommTimeouts();
 	void   SendComData(char *szRevData);
 	static DWORD  ReadThreadProc(LPVOID lpParameter);

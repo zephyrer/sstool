@@ -5,14 +5,32 @@
 
 #define     MAX_BUFFER_SIZE   512
 
-volatile	int			g_iExitFlag=0;
-static		int			g_wExitFlag=0;
-static		int			g_rExitFlag=0;
-static		int			g_pExitFlag=0;
+volatile int			g_iExitFlag=0;
+static	 int			g_wExitFlag=0;
+static	 int			g_rExitFlag=0;
+static	 int			g_pExitFlag=0;
 
-static		BYTE		g_DataBuf[MAX_BUFFER_SIZE];
-static      int			g_iInPos=0;
-static		int			g_iOutPos=0;
+static	BYTE		g_DataBuf[MAX_BUFFER_SIZE];
+static  int			g_iInPos=0;
+static	int			g_iOutPos=0;
+
+const int g_iBaudrate[]=
+{
+	CBR_110,
+	CBR_300,
+	CBR_600,
+	CBR_1200,
+	CBR_2400,
+	CBR_4800,
+	CBR_9600,
+	CBR_14400,
+	CBR_19200,
+	CBR_38400,
+	CBR_57600,
+	CBR_115200,
+	CBR_128000,
+	CBR_256000,
+};
 
 ConnPort::ConnPort(void)
 {
@@ -22,14 +40,14 @@ ConnPort::~ConnPort(void)
 {
 
 }
-BOOL ConnPort::ConfigPort()
+BOOL ConnPort::ConfigPort(int iBaudrate,int iParity,int iDataBits,int iStopBits)
 {
     DCB portDCB;
     portDCB.DCBlength=sizeof(DCB);
     GetCommState(m_hPort,&portDCB);
     //设置DCB结构
-    portDCB.BaudRate=115200;
-    portDCB.ByteSize=8;
+    portDCB.BaudRate=g_iBaudrate[iBaudrate];
+    portDCB.ByteSize=iDataBits+6;
     portDCB.fBinary=TRUE;
     portDCB.fDsrSensitivity=FALSE;
     portDCB.fAbortOnError=FALSE;
@@ -44,9 +62,9 @@ BOOL ConnPort::ConfigPort()
     portDCB.fParity=FALSE;
     portDCB.fRtsControl=RTS_CONTROL_DISABLE;
     portDCB.fTXContinueOnXoff=FALSE;
-    portDCB.Parity=NOPARITY;//无奇偶校验
-    portDCB.StopBits=ONESTOPBIT;
-    
+    portDCB.Parity=iParity;//无奇偶校验
+    portDCB.StopBits=iStopBits;
+  
     if(!SetCommState(m_hPort,&portDCB))
     {
         return FALSE;
@@ -115,7 +133,7 @@ BOOL ConnPort::ClosePort()
     return TRUE;
 }
 
-BOOL ConnPort::OpenPort(TCHAR *szPort)
+BOOL ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int iStopBits)
 {
 	 DWORD dwThreadID=0;
 	 g_iExitFlag=0;
@@ -141,7 +159,7 @@ BOOL ConnPort::OpenPort(TCHAR *szPort)
    //刷新缓冲区信息->输入、输出缓冲区
    PurgeComm(m_hPort,PURGE_TXCLEAR|PURGE_RXCLEAR);
 
-   if(!ConfigPort()) return FALSE;
+   if(!ConfigPort(iBaudrate,iParity,iDataBits,iStopBits)) return FALSE;
    if(!CommTimeouts())return FALSE;
 
    InitializeCriticalSection(&m_csRead);
