@@ -10,9 +10,12 @@ static	 int			g_wExitFlag=0;
 static	 int			g_rExitFlag=0;
 static	 int			g_pExitFlag=0;
 
-static	BYTE		g_DataBuf[MAX_BUFFER_SIZE];
-static  int			g_iInPos=0;
-static	int			g_iOutPos=0;
+static	BYTE		g_ReadDataBuf[MAX_BUFFER_SIZE];
+static	TCHAR		g_WriteDataBuf[MAX_BUFFER_SIZE];
+static  int			g_iRInPos=0;
+static	int			g_iROutPos=0;
+static  int			g_iWInPos=0;
+static	int			g_iWOutPos=0;
 
 const int g_iBaudrate[]=
 {
@@ -186,7 +189,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
     {
         AfxMessageBox(L"the port is not opened!");
     }
-	memset(g_DataBuf,0,MAX_BUFFER_SIZE);
+	memset(g_ReadDataBuf,0,MAX_BUFFER_SIZE);
 	memset(&comStat,0,sizeof(COMSTAT));
     while(1)
     {
@@ -202,14 +205,14 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 				while(dwLength>0)
 				{
 					//¶ÁÊý¾Ý
-					if(g_iInPos==g_iOutPos) Sleep(20);
+					if(g_iRInPos==g_iROutPos) Sleep(20);
 					BOOL bRet=ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,NULL);
 					if(!bRet||0==dwLength) 
 					{
 						continue;
 					}
-					g_DataBuf[g_iInPos]=RXBuffer;
-					g_iInPos=((g_iInPos++)%MAX_BUFFER_SIZE);
+					g_ReadDataBuf[g_iRInPos]=RXBuffer;
+					g_iRInPos=((g_iRInPos++)%MAX_BUFFER_SIZE);
 					dwLength--;
 				}
 				LeaveCriticalSection(&pThis->m_csRead);
@@ -229,50 +232,68 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 	while(1)
 	{
 		if(1==g_iExitFlag) break;
-		if(g_iOutPos==g_iInPos) Sleep(10);
-		sprintf(&szTmp,"%c",g_DataBuf[g_iOutPos]);
+		if(g_iROutPos==g_iRInPos) Sleep(10);
+		sprintf(&szTmp,"%c",g_ReadDataBuf[g_iROutPos]);
 		if(szTmp=='\n')
 		{
 			szRev[iReadCount++]='\n';
 			pThis->SendComData(szRev);
 			iReadCount=0;
-			g_DataBuf[g_iOutPos]=0;
-			g_iOutPos=((g_iOutPos++)%MAX_BUFFER_SIZE);
+			g_ReadDataBuf[g_iROutPos]=0;
+			g_iROutPos=((g_iROutPos++)%MAX_BUFFER_SIZE);
 			memset(szRev,0,MAX_BUFFER_SIZE);
 		}
 		else if(szTmp!=0)
 		{
 			szRev[iReadCount++]=szTmp;
-			g_DataBuf[g_iOutPos]=0;
-			g_iOutPos=((g_iOutPos++)%MAX_BUFFER_SIZE);
+			g_ReadDataBuf[g_iROutPos]=0;
+			g_iROutPos=((g_iROutPos++)%MAX_BUFFER_SIZE);
 		}	
 	}
 	g_pExitFlag=1;
-	return 1;
+	return TRUE;
+}
+BOOL ConnPort::WriteByte(BYTE byWrite)
+{
+	g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=byWrite;
+	return  TRUE;
+}
+BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
+{
+	if(NULL==szWriteData|| 0==iLen)
+		return FALSE;
+	for(int iLoop=0;iLoop<iLen;iLoop++)
+	{
+		g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szWriteData[iLoop];
+	}
+	return  TRUE;
 }
 DWORD ConnPort::WriteThreadProc( LPVOID p )
 {
 
     DWORD dwWritten;
+	TCHAR  *szTmp;
     ConnPort *pThis=(ConnPort *)p;
-
+	memset(g_WriteDataBuf,0,MAX_BUFFER_SIZE);
     while(TRUE)
     {
-	 if(1==g_iExitFlag) break;
-	 #if 0
-     //WaitForSingleObject(g_hEvent[hWrite],INFINITE);
-     EnterCriticalSection(&pThis->m_csWrite);
-     if(INVALID_HANDLE_VALUE!=pThis->m_hPort)
-     {
+		if(1==g_iExitFlag)
+		{
+			break;
+		}
+		if(g_iWInPos==g_iWOutPos) continue;
+		EnterCriticalSection(&pThis->m_csWrite);
+		if(INVALID_HANDLE_VALUE!=pThis->m_hPort)
+		{
          SetCommMask(pThis->m_hPort,EV_RXCHAR);
          PurgeComm(pThis->m_hPort,PURGE_TXCLEAR|PURGE_RXCLEAR);
-         WriteFile(pThis->m_hPort,pThis->m_WrriteBuffer,(strlen(pThis->m_WrriteBuffer)+1)*sizeof(TCHAR),&dwWritten,NULL);
-     }
-     LeaveCriticalSection(&pThis->m_csWrite);
-	#endif
+		 pThis->m_WrriteBuffer=g_WriteDataBuf[(g_iWOutPos++)%MAX_BUFFER_SIZE];
+         WriteFile(pThis->m_hPort,&(pThis->m_WrriteBuffer),1,&dwWritten,NULL);
+		}
+		LeaveCriticalSection(&pThis->m_csWrite);
     }
-  g_wExitFlag=1;
-  return 0;
+	g_wExitFlag=1;
+	return 0;
 }
 void ConnPort::SendComData(char *szRevData)
 {
