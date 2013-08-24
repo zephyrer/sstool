@@ -114,6 +114,7 @@ void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_STOPBITS, m_cbStopBits);
 	DDX_Control(pDX, IDC_COMBO_DATABITS, m_cbDataBits);
 	DDX_Control(pDX, IDC_COMBO_PARITY, m_cbParity);
+	DDX_Control(pDX, IDC_EDIT_SND, m_mSend);
 }
 
 BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
@@ -123,6 +124,7 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_CON, &CSSToolDlg::OnBnClickedButtonCon)
 	ON_BN_CLICKED(IDC_BUTTON_DISCONN, &CSSToolDlg::OnBnClickedButtonDisconn)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR, &CSSToolDlg::OnBnClickedButtonClear)
+	ON_BN_CLICKED(IDC_BUTTON_SEND, &CSSToolDlg::OnBnClickedButtonSend)
 END_MESSAGE_MAP()
 
 
@@ -295,4 +297,14 @@ void CSSToolDlg::OnBnClickedButtonClear()
 	m_ctlMsgOut.SetSel(0,-1);
 	m_ctlMsgOut.ReplaceSel(L" ");
 	UpdateData(FALSE);
+}
+
+void CSSToolDlg::OnBnClickedButtonSend()
+{
+	TCHAR *szSend=NULL;
+	CString strWrite;
+	m_mSend.GetWindowTextW(strWrite);
+	szSend=strWrite.GetBuffer(strWrite.GetLength());
+	m_conn.WriteString(szSend,strWrite.GetLength());
+
 }

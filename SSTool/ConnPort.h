@@ -7,9 +7,11 @@ public:
 	~ConnPort(void);
 	BOOL ClosePort();
 	BOOL OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int iStopBits);
+	BOOL WriteByte(BYTE byWrite);
+	BOOL WriteString(TCHAR *szWriteData,int iLen);
 
 protected:
-	TCHAR m_WrriteBuffer[512];
+	TCHAR m_WrriteBuffer;
 
 	HANDLE m_hPort;
 	HANDLE m_hThreadRead;

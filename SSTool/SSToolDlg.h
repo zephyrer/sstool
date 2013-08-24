@@ -85,4 +85,6 @@ public:
 	CComboBox m_cbStopBits;
 	CComboBox m_cbDataBits;
 	CComboBox m_cbParity;
+	afx_msg void OnBnClickedButtonSend();
+	CEdit m_mSend;
 };
