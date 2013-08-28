@@ -50,7 +50,7 @@ class CSSToolDlg : public CDialogEx
 {
 // Construction
 public:
-	CSSToolDlg(CWnd* pParent = NULL);	// standard constructor
+	CSSToolDlg(const CString& str,CWnd* pParent = NULL);	// standard constructor
 
 // Dialog Data
 	enum { IDD = IDD_SSTOOL_DIALOG};
@@ -65,6 +65,7 @@ protected:
 	int	  m_iCurDataBits;
 	int	  m_iCurStopBits;
 	int	  m_iCurParity;
+	CString	m_strCaption;
 	CString m_RecieveData;
 	void InitCommParams();
 	// Generated message map functions
@@ -74,17 +75,22 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	CComboBox m_ctrComList;
-	afx_msg void OnBnClickedButtonCon();
 	void  OutMsg(CString strMsg);
-	afx_msg void OnBnClickedButtonDisconn();
-	CEdit m_ctlMsgOut;
 	afx_msg void OnBnClickedButtonClear();
-	CTabCtrl m_TabItem;
-	CComboBox m_cbBaudrate;
-	CComboBox m_cbStopBits;
-	CComboBox m_cbDataBits;
-	CComboBox m_cbParity;
 	afx_msg void OnBnClickedButtonSend();
-	CEdit m_mSend;
+	afx_msg void OnBnClickedButtonHex();
+	afx_msg void OnBnClickedButtonCon();
+	CComboBox	m_ctrComList;
+	CTabCtrl	m_TabItem;
+	CComboBox	m_cbBaudrate;
+	CComboBox	m_cbStopBits;
+	CComboBox	m_cbDataBits;
+	CComboBox	m_cbParity;
+	CEdit		m_ctlMsgOut;
+	CEdit		m_mSend;
+	CButton		m_connBtn;
+	CButton		m_hexBtn;
+	CEdit		m_sndTimer;
+	CButton		m_hexSnd;
+	CButton		m_scSnd;
 };

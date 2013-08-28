@@ -98,10 +98,11 @@ END_MESSAGE_MAP()
 
 // CSSToolDlg dialog
 
-CSSToolDlg::CSSToolDlg(CWnd* pParent /*=NULL*/)
+CSSToolDlg::CSSToolDlg(const CString& str,CWnd* pParent /*=NULL*/)
 	: CDialogEx(CSSToolDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_strCaption = str;
 	m_iCurConn=0;
 }
 void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
@@ -115,6 +116,11 @@ void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_DATABITS, m_cbDataBits);
 	DDX_Control(pDX, IDC_COMBO_PARITY, m_cbParity);
 	DDX_Control(pDX, IDC_EDIT_SND, m_mSend);
+	DDX_Control(pDX, IDC_BUTTON_CON, m_connBtn);
+	DDX_Control(pDX, IDC_BUTTON_HEX, m_hexBtn);
+	DDX_Control(pDX, IDC_EDIT_STIME, m_sndTimer);
+	DDX_Control(pDX, IDC_CHECK_HEXSEND, m_hexSnd);
+	DDX_Control(pDX, IDC_CHECK_SC_SEND, m_scSnd);
 }
 
 BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
@@ -122,9 +128,9 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_CON, &CSSToolDlg::OnBnClickedButtonCon)
-	ON_BN_CLICKED(IDC_BUTTON_DISCONN, &CSSToolDlg::OnBnClickedButtonDisconn)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR, &CSSToolDlg::OnBnClickedButtonClear)
 	ON_BN_CLICKED(IDC_BUTTON_SEND, &CSSToolDlg::OnBnClickedButtonSend)
+	ON_BN_CLICKED(IDC_BUTTON_HEX, &CSSToolDlg::OnBnClickedButtonHex)
 END_MESSAGE_MAP()
 
 
@@ -191,6 +197,7 @@ BOOL CSSToolDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}
+	this->SetWindowText(m_strCaption);
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
@@ -204,6 +211,7 @@ BOOL CSSToolDlg::OnInitDialog()
 	m_TabItem.InsertItem(2,L"System");
 	/*Init Tab control item parameter*/
 
+	m_sndTimer.SetWindowTextW(L"1000");
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -273,23 +281,30 @@ void  CSSToolDlg::OutMsg(CString strMsg)
 }
 void CSSToolDlg::OnBnClickedButtonCon()
 {
-	m_iCurConn=m_ctrComList.GetCurSel();
-	m_iCurBaudrate=m_cbBaudrate.GetCurSel();
-	m_iCurDataBits=m_cbDataBits.GetCurSel();
-	m_iCurStopBits=m_cbStopBits.GetCurSel();
-	m_iCurParity=m_cbParity.GetCurSel();
+	if(!m_conn.IsConnect())
+	{
+		m_iCurConn=m_ctrComList.GetCurSel();
+		m_iCurBaudrate=m_cbBaudrate.GetCurSel();
+		m_iCurDataBits=m_cbDataBits.GetCurSel();
+		m_iCurStopBits=m_cbStopBits.GetCurSel();
+		m_iCurParity=m_cbParity.GetCurSel();
 
-	if(m_conn.OpenPort(strConn[m_iCurConn],m_iCurBaudrate,m_iCurParity,m_iCurDataBits,m_iCurStopBits))
-		MessageBox(L"Connect Success!");
+		if(m_conn.OpenPort(strConn[m_iCurConn],m_iCurBaudrate,m_iCurParity,m_iCurDataBits,m_iCurStopBits))
+		{
+			m_connBtn.SetWindowTextW(L"DISCONNECT");
+		}
+		else
+		{
+			MessageBox(L"Connect Failed!");
+		}
+	}
 	else
-		MessageBox(L"Connect Failed!");
-}
-void CSSToolDlg::OnBnClickedButtonDisconn()
-{
-	if(m_conn.ClosePort())
-		MessageBox(L"Done!");
-	else
-		MessageBox(L"Error to disconnect!");
+	{
+		if(m_conn.ClosePort())
+		{
+			m_connBtn.SetWindowTextW(L"CONNECT");
+		}
+	}
 }
 void CSSToolDlg::OnBnClickedButtonClear()
 {
@@ -307,4 +322,24 @@ void CSSToolDlg::OnBnClickedButtonSend()
 	szSend=strWrite.GetBuffer(strWrite.GetLength());
 	m_conn.WriteString(szSend,strWrite.GetLength());
 
+}
+
+
+void CSSToolDlg::OnBnClickedButtonHex()
+{
+	if(!m_conn.IsConnect())
+	{
+		MessageBox(L"Serial port is not connected£¡");
+		return;
+	}
+	if(!m_conn.GetHexShowEnable())
+	{
+		m_conn.SetHexShow(TRUE);
+		m_hexBtn.SetWindowTextW(L"DEC");
+	}
+	else
+	{
+		m_conn.SetHexShow(FALSE);
+		m_hexBtn.SetWindowTextW(L"HEX");
+	}
 }
