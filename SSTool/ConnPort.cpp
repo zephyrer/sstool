@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+Ôªø#include "StdAfx.h"
 #include "ConnPort.h"
 #include "SSToolDlg.h"
 #include "string.h"
@@ -37,6 +37,7 @@ const int g_iBaudrate[]=
 
 ConnPort::ConnPort(void)
 {
+	m_bIsConnect=FALSE;
 }
 
 ConnPort::~ConnPort(void)
@@ -48,7 +49,7 @@ BOOL ConnPort::ConfigPort(int iBaudrate,int iParity,int iDataBits,int iStopBits)
     DCB portDCB;
     portDCB.DCBlength=sizeof(DCB);
     GetCommState(m_hPort,&portDCB);
-    //…Ë÷√DCBΩ·ππ
+    //ËÆæÁΩÆDCBÁªìÊûÑ
     portDCB.BaudRate=g_iBaudrate[iBaudrate];
     portDCB.ByteSize=iDataBits+6;
     portDCB.fBinary=TRUE;
@@ -65,7 +66,7 @@ BOOL ConnPort::ConfigPort(int iBaudrate,int iParity,int iDataBits,int iStopBits)
     portDCB.fParity=FALSE;
     portDCB.fRtsControl=RTS_CONTROL_DISABLE;
     portDCB.fTXContinueOnXoff=FALSE;
-    portDCB.Parity=iParity;//Œﬁ∆Ê≈º–£—È
+    portDCB.Parity=iParity;//Êó†Â•áÂÅ∂Ê†°È™å
     portDCB.StopBits=iStopBits;
   
     if(!SetCommState(m_hPort,&portDCB))
@@ -132,10 +133,13 @@ BOOL ConnPort::ClosePort()
     if(!CloseHandle(m_hThreadRead))return FALSE;
     if(!CloseHandle(m_hThreadWrite))return FALSE;
 	if(!CloseHandle(m_hDataParse))return FALSE;
-
+	m_bIsConnect=FALSE;
     return TRUE;
 }
-
+BOOL ConnPort::IsConnect()
+{
+	return m_bIsConnect;
+}
 BOOL ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int iStopBits)
 {
 	 DWORD dwThreadID=0;
@@ -155,11 +159,11 @@ BOOL ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,in
         wprintf(TEXT("open port failed!!!\r\n"));
         return FALSE;
     }
-   //÷∏∂®∂Àø⁄ºÏ≤‚µƒ ¬º˛ºØ
+   //ÊåáÂÆöÁ´ØÂè£Ê£ÄÊµãÁöÑ‰∫ã‰ª∂ÈõÜ
    SetCommMask(m_hPort,EV_RXCHAR);
-   //…Ë÷√ª∫≥Â«¯£¨ƒ⁄≤ø ‰»Î°¢ ‰≥ˆª∫≥Â«¯¥Û–°
+   //ËÆæÁΩÆÁºìÂÜ≤Âå∫ÔºåÂÜÖÈÉ®ËæìÂÖ•„ÄÅËæìÂá∫ÁºìÂÜ≤Âå∫Â§ßÂ∞è
    SetupComm(m_hPort,512,512);
-   //À¢–¬ª∫≥Â«¯–≈œ¢-> ‰»Î°¢ ‰≥ˆª∫≥Â«¯
+   //Âà∑Êñ∞ÁºìÂÜ≤Âå∫‰ø°ÊÅØ->ËæìÂÖ•„ÄÅËæìÂá∫ÁºìÂÜ≤Âå∫
    PurgeComm(m_hPort,PURGE_TXCLEAR|PURGE_RXCLEAR);
 
    if(!ConfigPort(iBaudrate,iParity,iDataBits,iStopBits)) return FALSE;
@@ -167,11 +171,11 @@ BOOL ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,in
 
    InitializeCriticalSection(&m_csRead);
    InitializeCriticalSection(&m_csWrite);
-  //¥¥Ω®∂¡–¥œﬂ≥Ã
+  //ÂàõÂª∫ËØªÂÜôÁ∫øÁ®ã
    m_hThreadRead  = CreateThread(0,0,(LPTHREAD_START_ROUTINE)ReadThreadProc, (void*)this,0,&dwThreadID);
    m_hThreadWrite = CreateThread(0,0,(LPTHREAD_START_ROUTINE)WriteThreadProc,(void*)this,0,&dwThreadID);
    m_hDataParse = CreateThread(0,0,(LPTHREAD_START_ROUTINE)PareDataProc,(void*)this,0,&dwThreadID);
-
+   m_bIsConnect=TRUE;
    return TRUE;
 
 }
@@ -204,7 +208,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 				EnterCriticalSection(&pThis->m_csRead);
 				while(dwLength>0)
 				{
-					//∂¡ ˝æ›
+					//ËØªÊï∞ÊçÆ
 					if(g_iRInPos==g_iROutPos) Sleep(20);
 					BOOL bRet=ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,NULL);
 					if(!bRet||0==dwLength) 
@@ -237,7 +241,7 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 		if(szTmp=='\n')
 		{
 			szRev[iReadCount++]='\n';
-			pThis->SendComData(szRev);
+			pThis->SendComData(szRev,iReadCount);
 			iReadCount=0;
 			g_ReadDataBuf[g_iROutPos]=0;
 			g_iROutPos=((g_iROutPos++)%MAX_BUFFER_SIZE);
@@ -295,13 +299,54 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 	g_wExitFlag=1;
 	return 0;
 }
-void ConnPort::SendComData(char *szRevData)
+Uint ConnPort::Char2Hex(char *Buffer,char *szOut,int iLen)
 {
-		CString         strMsg;
-		TCHAR			m_revData[MAX_BUFFER_SIZE];
+    Uint uRet=0;
+	char szHexChar[4]={0};
+    if(NULL==Buffer)return 0;
+	if(NULL==szOut)return 0;
+    static const char szHex[]="!\"#$%&`()*+,-.\/0123456789:;<=>?@ABCDEFGHIJLLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqstuvwxyz{|}~"
+		"‚Ç¨‚Äö∆í‚Äû‚Ä¶‚Ä†‚Ä°ÀÜ‚Ä∞≈†‚Äπ≈í≈Ω‚Äò‚Äô‚Äú‚Äù‚Ä¢‚Äì‚ÄîÀú‚Ñ¢≈°‚Ä∫≈ì≈æ≈∏";
+    static char  szHexCompare[256]={0};
+    for(int i=0;i<sizeof(szHex)-1;i++)
+    {
+        szHexCompare[szHex[i]]=i+33;
+    }
+	for(int i=0;i<iLen;i++)
+	{
+		uRet=szHexCompare[Buffer[i]];
+		sprintf(szHexChar,"%2X",uRet);
+		strcat(szOut,szHexChar);
+		strcat(szOut,"  ");
+	}
+    return TRUE;
+}
+void ConnPort::SetHexShow(BOOL bHex)
+{
+	m_bHexShow=bHex;
+}
+BOOL ConnPort::GetHexShowEnable()
+{
+	return m_bHexShow;
+}
+void ConnPort::SendComData(char *szRevData,int iLen)
+{
+		CString     strMsg;
+		TCHAR		m_revData[MAX_BUFFER_SIZE];
+		char		szTrans[MAX_BUFFER_SIZE];
+
         CSSToolDlg		*dlg=(CSSToolDlg *)AfxGetApp()->GetMainWnd();
         memset(m_revData,0,MAX_BUFFER_SIZE);
-		MultiByteToWideChar(CP_ACP,0,szRevData,-1,m_revData,MAX_BUFFER_SIZE);
+		memset(szTrans,0,MAX_BUFFER_SIZE);
+		if(m_bHexShow)
+		{
+			Char2Hex(szRevData,szTrans,iLen);
+			MultiByteToWideChar(CP_ACP,0,szTrans,-1,m_revData,MAX_BUFFER_SIZE);
+		}
+		else
+		{
+			MultiByteToWideChar(CP_ACP,0,szRevData,-1,m_revData,MAX_BUFFER_SIZE);
+		}
 		strMsg=m_revData;
         if(!strMsg.IsEmpty())
         {

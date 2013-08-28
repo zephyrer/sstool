@@ -1,11 +1,22 @@
-﻿Build started 2013/8/24 14:11:40.
+﻿Build started 2013/8/27 14:43:05.
      1>Project "E:\study\VCProject\sstool\SSTool\SSTool.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
-         Touching "Debug\SSTool.unsuccessfulbuild".
+         Creating "Debug\SSTool.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
          All outputs are up-to-date.
-         D:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\SSTool.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt SSToolDlg.cpp
-         SSToolDlg.cpp
+         D:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\SSTool.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ConnPort.cpp
+         ConnPort.cpp
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(188): warning C4101: 'dwModemStat' : unreferenced local variable
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(240): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(279): warning C4101: 'szTmp' : unreferenced local variable
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(308): warning C4129: '/' : unrecognized character escape sequence
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(317): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(318): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\string.h(110) : see declaration of 'strcat'
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(319): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\string.h(110) : see declaration of 'strcat'
        ResourceCompile:
          All outputs are up-to-date.
        ManifestResourceCompile:
@@ -30,4 +41,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.89
+Time Elapsed 00:00:00.70
