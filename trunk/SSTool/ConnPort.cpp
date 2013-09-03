@@ -302,22 +302,15 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 Uint ConnPort::Char2Hex(char *Buffer,char *szOut,int iLen)
 {
     Uint uRet=0;
-	char szHexChar[4]={0};
+	char szHexChar[8]={0};
     if(NULL==Buffer)return 0;
 	if(NULL==szOut)return 0;
-    static const char szHex[]="!\"#$%&`()*+,-.\/0123456789:;<=>?@ABCDEFGHIJLLMNOPQRSTUVWXYZ[\\]^_'abcdefghijklmnopqstuvwxyz{|}~"
-		"€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ";
-    static char  szHexCompare[256]={0};
-    for(int i=0;i<sizeof(szHex)-1;i++)
-    {
-        szHexCompare[szHex[i]]=i+33;
-    }
+
 	for(int i=0;i<iLen;i++)
 	{
-		uRet=szHexCompare[Buffer[i]];
-		sprintf(szHexChar,"%2X",uRet);
+		uRet=(Uint)Buffer[i];
+		sprintf(szHexChar,"%02X ",uRet);
 		strcat(szOut,szHexChar);
-		strcat(szOut,"  ");
 	}
     return TRUE;
 }
