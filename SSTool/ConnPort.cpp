@@ -197,6 +197,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 	memset(&comStat,0,sizeof(COMSTAT));
     while(1)
     {
+		Sleep(1);
 		if(1==g_iExitFlag)
 		{
 			break;
@@ -235,6 +236,7 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 	memset(szRev,0,MAX_BUFFER_SIZE);
 	while(1)
 	{
+		Sleep(0);
 		if(1==g_iExitFlag) break;
 		if(g_iROutPos==g_iRInPos) Sleep(10);
 		sprintf(&szTmp,"%c",g_ReadDataBuf[g_iROutPos]);
@@ -281,6 +283,7 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 	memset(g_WriteDataBuf,0,MAX_BUFFER_SIZE);
     while(TRUE)
     {
+		Sleep(2);
 		if(1==g_iExitFlag)
 		{
 			break;
