@@ -7,13 +7,26 @@
 #include "SSToolDlg.h"
 #include "afxdialogex.h"
 #include "ConnPort.h"
-
+#include "stdio.h"
+#include "io.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 TCHAR *strConn[]=
+{
+	L"COM1",
+	L"COM2",
+	L"COM3",
+	L"COM4",
+	L"COM5",
+	L"COM6",
+	L"COM7",
+	L"COM8",
+	L"COM9",
+};
+TCHAR *strConnStore[]=
 {
 	L"COM1",
 	L"COM2",
@@ -131,6 +144,7 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR, &CSSToolDlg::OnBnClickedButtonClear)
 	ON_BN_CLICKED(IDC_BUTTON_SEND, &CSSToolDlg::OnBnClickedButtonSend)
 	ON_BN_CLICKED(IDC_BUTTON_HEX, &CSSToolDlg::OnBnClickedButtonHex)
+	ON_BN_CLICKED(IDC_BUTTON_SAVE, &CSSToolDlg::OnBnClickedButtonSave)
 END_MESSAGE_MAP()
 
 
@@ -138,13 +152,30 @@ END_MESSAGE_MAP()
 
 void CSSToolDlg::InitCommParams()
 {
+	HANDLE  hComm;
+	int		nConm=0;
+	int		nCount=0;
+	BOOL	bFlag=FALSE;
 	int iLen=sizeof(strConn)/sizeof(strConn[0]);
 
 	for(int i=0;i<iLen;i++)
 	{
-		m_ctrComList.AddString(strConn[i]);
+		hComm = CreateFile(strConn[i], 0, 0, 0, 
+            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+         if(INVALID_HANDLE_VALUE != hComm )
+         {
+			CloseHandle(hComm);
+			m_ctrComList.AddString(strConn[i]);
+			memset(strConnStore,0,sizeof(strConnStore)/sizeof(strConnStore[0]));
+			strConnStore[nCount++]=strConn[i];
+			if(!bFlag)
+			{
+				nConm=i;
+				bFlag=TRUE;
+			}
+		 }
 	}
-	m_ctrComList.SetCurSel(COM1);
+	m_ctrComList.SetCurSel(0);
 
 	iLen=sizeof(strBaudRate)/sizeof(strBaudRate[0]);
 	for(int i=0;i<iLen;i++)
@@ -266,7 +297,7 @@ HCURSOR CSSToolDlg::OnQueryDragIcon()
 void  CSSToolDlg::OutMsg(CString strMsg)
 {
 	int iLen=0;
-	if(m_ctlMsgOut.GetLineCount()>400)
+	if(m_ctlMsgOut.GetLineCount()>1000)
 	{
 		m_RecieveData.Empty();
 		m_ctlMsgOut.SetSel(0,-1);
@@ -289,7 +320,7 @@ void CSSToolDlg::OnBnClickedButtonCon()
 		m_iCurStopBits=m_cbStopBits.GetCurSel();
 		m_iCurParity=m_cbParity.GetCurSel();
 
-		if(m_conn.OpenPort(strConn[m_iCurConn],m_iCurBaudrate,m_iCurParity,m_iCurDataBits,m_iCurStopBits))
+		if(m_conn.OpenPort(strConnStore[m_iCurConn],m_iCurBaudrate,m_iCurParity,m_iCurDataBits,m_iCurStopBits))
 		{
 			m_connBtn.SetWindowTextW(L"DISCONNECT");
 		}
@@ -342,4 +373,66 @@ void CSSToolDlg::OnBnClickedButtonHex()
 		m_conn.SetHexShow(FALSE);
 		m_hexBtn.SetWindowTextW(L"HEX");
 	}
+}
+CString CSSToolDlg::CommonGetCurPath()  
+{   
+   CString    sPath;   
+   GetModuleFileName(NULL,sPath.GetBufferSetLength(MAX_PATH+1),MAX_PATH);   
+   sPath.ReleaseBuffer();   
+   int    nPos;   
+   nPos=sPath.ReverseFind('\\');   
+   sPath=sPath.Left(nPos);   
+   return    sPath;   
+}
+void CSSToolDlg::OnBnClickedButtonSave()
+{
+	
+	int nLength=0;
+	CFile m_CFile;
+	char szbuf[20];
+	CTime tt;
+	CString m_strTime;
+	CString m_strTextFile;
+
+
+	m_StrCurPath=CommonGetCurPath();
+	nLength=m_StrCurPath.GetLength();
+
+	for(int nLoop=0;nLoop<nLength;nLoop++)
+	{
+		if(m_StrCurPath.GetAt(nLoop)=='\\')
+		{
+			CreateDirectory(m_StrCurPath.Left(nLoop+1),NULL);
+		}
+	}
+	CreateDirectory(m_StrCurPath,NULL);
+	SetCurrentDirectory(m_StrCurPath);
+
+	for(int nLoop=1;nLoop<80;nLoop++)
+	{
+		sprintf(szbuf,"SaveDebugText%02d.txt",nLoop);
+		if((access(szbuf,0)==-1))
+			break;
+	}
+	m_strTextFile=szbuf;
+	if(!m_CFile.Open(m_strTextFile,CFile::modeCreate| CFile::modeWrite))
+	{
+		AfxMessageBox(L"Create debug text fail!");
+		return;
+	}
+	#if 0
+	if((access(szbuf,0))==-1)
+	{
+		AfxMessageBox(L"Create debug text fail!");
+		return;
+	}
+	#endif
+	tt=CTime::GetCurrentTime();
+	m_strTime=tt.Format(L"===================\r\n%Y-%m-%d %H:%M:%S\r\n===================\r\n");
+	m_CFile.Write((LPCTSTR)m_strTime,m_strTime.GetLength()*sizeof(TCHAR));
+	m_CFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
+	m_CFile.Flush();
+	m_CFile.Close();
+
+	MessageBox(_T("Done!"),NULL, MB_OK);
 }
