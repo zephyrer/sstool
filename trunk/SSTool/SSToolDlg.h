@@ -65,11 +65,13 @@ protected:
 	int	  m_iCurDataBits;
 	int	  m_iCurStopBits;
 	int	  m_iCurParity;
+	BOOL  m_HexSend;
 	CString	m_strCaption;
 	CString m_RecieveData;
 	CString	m_StrCurPath;
 	void InitCommParams();
 	CString CommonGetCurPath(); 
+	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
@@ -96,4 +98,7 @@ public:
 	CButton		m_hexSnd;
 	CButton		m_scSnd;
 	afx_msg void OnBnClickedButtonSave();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnBnClickedCheckHexsend();
+	afx_msg void OnBnClickedCheckScSend();
 };

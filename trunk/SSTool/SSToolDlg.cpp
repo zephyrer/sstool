@@ -145,6 +145,9 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_SEND, &CSSToolDlg::OnBnClickedButtonSend)
 	ON_BN_CLICKED(IDC_BUTTON_HEX, &CSSToolDlg::OnBnClickedButtonHex)
 	ON_BN_CLICKED(IDC_BUTTON_SAVE, &CSSToolDlg::OnBnClickedButtonSave)
+	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_CHECK_HEXSEND, &CSSToolDlg::OnBnClickedCheckHexsend)
+	ON_BN_CLICKED(IDC_CHECK_SC_SEND, &CSSToolDlg::OnBnClickedCheckScSend)
 END_MESSAGE_MAP()
 
 
@@ -348,14 +351,37 @@ void CSSToolDlg::OnBnClickedButtonClear()
 void CSSToolDlg::OnBnClickedButtonSend()
 {
 	TCHAR *szSend=NULL;
+	TCHAR szHexChar[512];
 	CString strWrite;
 	m_mSend.GetWindowTextW(strWrite);
 	szSend=strWrite.GetBuffer(strWrite.GetLength());
-	m_conn.WriteString(szSend,strWrite.GetLength());
+	if(m_HexSend)
+	{
+		Char2Hex(szSend,szHexChar,strWrite.GetLength());
+		m_conn.WriteString(szHexChar,wcslen(szHexChar));
+	}
+	else
+	{
+		m_conn.WriteString(szSend,strWrite.GetLength());
+	}
 
 }
 
+BOOL CSSToolDlg::Char2Hex(TCHAR *szBuffer,TCHAR *szOut,int iLen)
+{
+	unsigned int uRet;
+	TCHAR szHexChar[8]={0};
+    if(NULL==szBuffer)return 0;
+	if(NULL==szOut)return 0;
 
+	for(int i=0;i<iLen;i++)
+	{
+		uRet=(unsigned int)szBuffer[i];
+		wsprintf(szHexChar,L"%02X ",uRet);
+		wcscat(szOut,szHexChar);
+	}
+    return TRUE;
+}
 void CSSToolDlg::OnBnClickedButtonHex()
 {
 	if(!m_conn.IsConnect())
@@ -435,4 +461,41 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	m_CFile.Close();
 
 	MessageBox(_T("Done!"),NULL, MB_OK);
+}
+
+
+void CSSToolDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	CDialogEx::OnTimer(nIDEvent);
+}
+
+
+void CSSToolDlg::OnBnClickedCheckHexsend()
+{
+	// TODO: Add your control notification handler code here
+	if(((CButton *)GetDlgItem(IDC_CHECK_HEXSEND))-> GetCheck())
+	{
+		m_HexSend=TRUE;
+	}
+	else
+	{
+		m_HexSend=FALSE;
+	}
+}
+
+void CSSToolDlg::OnBnClickedCheckScSend()
+{
+	CString strTimeGet;
+	if(((CButton *)GetDlgItem(IDC_CHECK_SC_SEND))-> GetCheck())
+	{
+		GetDlgItem(IDC_EDIT_STIME)->GetWindowTextW(strTimeGet);
+		int nTime=_wtoi(strTimeGet.GetBuffer()) ;
+		SetTimer(1,nTime,NULL);
+	}
+	else
+	{
+		KillTimer(1);
+	}
 }
