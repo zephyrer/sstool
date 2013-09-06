@@ -67,7 +67,9 @@ protected:
 	int	  m_iCurParity;
 	CString	m_strCaption;
 	CString m_RecieveData;
+	CString	m_StrCurPath;
 	void InitCommParams();
+	CString CommonGetCurPath(); 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
@@ -93,4 +95,5 @@ public:
 	CEdit		m_sndTimer;
 	CButton		m_hexSnd;
 	CButton		m_scSnd;
+	afx_msg void OnBnClickedButtonSave();
 };

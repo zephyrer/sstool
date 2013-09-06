@@ -177,7 +177,6 @@ BOOL ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,in
    m_hDataParse = CreateThread(0,0,(LPTHREAD_START_ROUTINE)PareDataProc,(void*)this,0,&dwThreadID);
    m_bIsConnect=TRUE;
    return TRUE;
-
 }
 DWORD ConnPort::ReadThreadProc(LPVOID p)
 {
