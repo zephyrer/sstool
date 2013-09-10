@@ -97,8 +97,11 @@ public:
 	CEdit		m_sndTimer;
 	CButton		m_hexSnd;
 	CButton		m_scSnd;
+	CButton		m_SendBtn;
 	afx_msg void OnBnClickedButtonSave();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedCheckHexsend();
 	afx_msg void OnBnClickedCheckScSend();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	
 };

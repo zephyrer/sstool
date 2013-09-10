@@ -134,6 +134,7 @@ void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_STIME, m_sndTimer);
 	DDX_Control(pDX, IDC_CHECK_HEXSEND, m_hexSnd);
 	DDX_Control(pDX, IDC_CHECK_SC_SEND, m_scSnd);
+	DDX_Control(pDX, IDC_BUTTON_SEND, m_SendBtn);
 }
 
 BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
@@ -148,6 +149,7 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_CHECK_HEXSEND, &CSSToolDlg::OnBnClickedCheckHexsend)
 	ON_BN_CLICKED(IDC_CHECK_SC_SEND, &CSSToolDlg::OnBnClickedCheckScSend)
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -498,4 +500,50 @@ void CSSToolDlg::OnBnClickedCheckScSend()
 	{
 		KillTimer(1);
 	}
+}
+
+
+void CSSToolDlg::OnSize(UINT nType, int cx, int cy)
+{
+	
+	CRect rcConn,rcText,rcDlg,rcSendBox,rcSendBtn;
+	CWnd *pWnd;
+
+	CDialogEx::OnSize(nType, cx, cy);
+
+	pWnd = GetDlgItem(IDC_EDIT_MSG_OUT);
+	if(pWnd)
+	{
+		m_connBtn.GetWindowRect(&rcConn);
+		GetClientRect(&rcDlg);
+		m_ctlMsgOut.GetWindowRect(rcText);
+		m_mSend.GetWindowRect(rcSendBox);
+		m_SendBtn.GetWindowRect(rcSendBtn);
+		ScreenToClient(&rcConn);
+		ScreenToClient(&rcText);
+		ScreenToClient(&rcSendBtn);
+		ScreenToClient(&rcSendBox);
+
+		rcSendBtn.left=rcDlg.right-rcSendBtn.Width()-1;
+		rcSendBtn.right=rcDlg.right-1;
+		rcSendBtn.top=rcDlg.bottom-2-rcSendBtn.Height();
+		rcSendBtn.bottom=rcDlg.bottom-2;
+
+		rcSendBox.left=rcConn.right+3;
+		rcSendBox.right=rcSendBtn.left-1;
+		rcSendBox.top=rcSendBtn.top;
+		rcSendBox.bottom=rcDlg.bottom-2;
+
+		rcText.left=rcConn.right+3;
+		rcText.right=rcDlg.right-2;
+		rcText.top=0;
+		rcText.bottom=rcSendBtn.top-2;
+
+		::MoveWindow(m_SendBtn.m_hWnd,rcSendBtn.left,rcSendBtn.top,rcSendBtn.right-rcSendBtn.left,rcSendBtn.bottom-rcSendBtn.top,0);
+		::MoveWindow(m_mSend.m_hWnd,rcSendBox.left,rcSendBox.top,rcSendBox.right-rcSendBox.left,rcSendBox.bottom-rcSendBox.top,0);
+		::MoveWindow(m_ctlMsgOut.m_hWnd,rcText.left,rcText.top,rcText.right-rcText.left,rcText.bottom-rcText.top,0);
+		InvalidateRect(FALSE);
+		UpdateWindow();
+	}
+	
 }
