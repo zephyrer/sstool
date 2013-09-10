@@ -65,7 +65,6 @@ protected:
 	int	  m_iCurDataBits;
 	int	  m_iCurStopBits;
 	int	  m_iCurParity;
-	BOOL  m_HexSend;
 	CString	m_strCaption;
 	CString m_RecieveData;
 	CString	m_StrCurPath;

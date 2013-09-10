@@ -4,7 +4,7 @@
 #include "string.h"
 
 #define     MAX_BUFFER_SIZE   512
-
+#define		MAX_SEND_SIZE	  256
 volatile int			g_iExitFlag=0;
 static	 int			g_wExitFlag=0;
 static	 int			g_rExitFlag=0;
@@ -38,6 +38,7 @@ const int g_iBaudrate[]=
 ConnPort::ConnPort(void)
 {
 	m_bIsConnect=FALSE;
+	m_bHexSend=FALSE;
 }
 
 ConnPort::~ConnPort(void)
@@ -265,11 +266,26 @@ BOOL ConnPort::WriteByte(BYTE byWrite)
 }
 BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
 {
+	TCHAR szCharHex[MAX_SEND_SIZE]={0};
 	if(NULL==szWriteData|| 0==iLen)
 		return FALSE;
+
+	if(m_bHexSend)
+	{
+		if(iLen>MAX_SEND_SIZE) 
+			return FALSE;
+		Hex2wChar(szWriteData,szCharHex,&iLen);
+	}
 	for(int iLoop=0;iLoop<iLen;iLoop++)
 	{
-		g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szWriteData[iLoop];
+		if(m_bHexSend)
+		{
+			g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szCharHex[iLoop];
+		}
+		else
+		{
+			g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szWriteData[iLoop];
+		}
 	}
 	return  TRUE;
 }
@@ -300,6 +316,51 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
     }
 	g_wExitFlag=1;
 	return 0;
+}
+Uint ConnPort::Hex2wChar(TCHAR *Buffer,TCHAR *szOut,int *iLen)
+{
+	int iCount=0;
+	int iDataLen=*iLen;
+	char szCharHex[MAX_SEND_SIZE]={0};
+	char *psText;
+	DWORD dwNum;
+
+	if(NULL==Buffer)return 0;
+
+	static const char szHexUpper[]="0123456789ABCDEF";
+	static const char szHexLow[]="abcdef";
+	char  szHexCompare[256]={0};
+
+	dwNum = WideCharToMultiByte(CP_OEMCP,NULL,Buffer,-1,NULL,0,NULL,FALSE);
+	psText = new char[dwNum];
+	if(!psText)
+	{
+		delete []psText;
+	}
+	WideCharToMultiByte (CP_OEMCP,NULL,Buffer,-1,psText,dwNum,NULL,FALSE);
+	
+	for(int i=0;i<(sizeof(szHexLow)/sizeof(szHexLow[0]))-1;i++)
+	{
+		szHexCompare[szHexLow[i]]=i+10;
+	}
+
+	for(int i=0;i<(sizeof(szHexUpper)/sizeof(szHexUpper[0]))-1;i++)
+	{
+		szHexCompare[szHexUpper[i]]=i;
+	}
+	for(int i=0;i<dwNum;i=i+1)
+	{
+		if(psText[i]!=32)
+		{
+			szCharHex[iCount++]=((szHexCompare[psText[i]])<<4)|(szHexCompare[psText[i+1]]);
+			i++;
+		}
+	}
+	dwNum = MultiByteToWideChar(CP_ACP, 0,szCharHex, -1, NULL, 0);
+	MultiByteToWideChar(CP_ACP, 0, szCharHex, -1,szOut,dwNum);
+	*iLen=iCount-1;
+	delete []psText;
+    return TRUE;
 }
 Uint ConnPort::Char2Hex(char *Buffer,char *szOut,int iLen)
 {
@@ -347,4 +408,12 @@ void ConnPort::SendComData(char *szRevData,int iLen)
         {
             dlg->OutMsg(strMsg);
         }
+}
+void ConnPort::SetHexSend(BOOL bHex)
+{
+	m_bHexSend=bHex;
+}
+BOOL ConnPort::GetHexSendEnable()
+{
+	return m_bHexSend;
 }

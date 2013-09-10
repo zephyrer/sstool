@@ -355,19 +355,10 @@ void CSSToolDlg::OnBnClickedButtonClear()
 void CSSToolDlg::OnBnClickedButtonSend()
 {
 	TCHAR *szSend=NULL;
-	TCHAR szHexChar[512];
 	CString strWrite;
 	m_mSend.GetWindowTextW(strWrite);
 	szSend=strWrite.GetBuffer(strWrite.GetLength());
-	if(m_HexSend)
-	{
-		Char2Hex(szSend,szHexChar,strWrite.GetLength());
-		m_conn.WriteString(szHexChar,wcslen(szHexChar));
-	}
-	else
-	{
-		m_conn.WriteString(szSend,strWrite.GetLength());
-	}
+	m_conn.WriteString(szSend,strWrite.GetLength());
 
 }
 
@@ -482,11 +473,11 @@ void CSSToolDlg::OnBnClickedCheckHexsend()
 	// TODO: Add your control notification handler code here
 	if(((CButton *)GetDlgItem(IDC_CHECK_HEXSEND))-> GetCheck())
 	{
-		m_HexSend=TRUE;
+		m_conn.SetHexSend(TRUE);
 	}
 	else
 	{
-		m_HexSend=FALSE;
+		m_conn.SetHexSend(FALSE);
 	}
 }
 
