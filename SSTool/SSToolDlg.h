@@ -69,6 +69,7 @@ protected:
 	CString	m_strCaption;
 	CString m_RecieveData;
 	CString	m_StrCurPath;
+	CString m_strStoreText;
 	void InitCommParams();
 	CString CommonGetCurPath(); 
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
