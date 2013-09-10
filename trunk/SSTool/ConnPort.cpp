@@ -282,7 +282,7 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 	memset(g_WriteDataBuf,0,MAX_BUFFER_SIZE);
     while(TRUE)
     {
-		Sleep(2);
+		Sleep(1);
 		if(1==g_iExitFlag)
 		{
 			break;

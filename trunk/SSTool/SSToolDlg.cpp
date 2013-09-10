@@ -302,8 +302,10 @@ HCURSOR CSSToolDlg::OnQueryDragIcon()
 void  CSSToolDlg::OutMsg(CString strMsg)
 {
 	int iLen=0;
-	if(m_ctlMsgOut.GetLineCount()>1000)
+	if(m_ctlMsgOut.GetLineCount()>600)
 	{
+		m_strStoreText.Empty();
+		m_strStoreText=m_RecieveData;
 		m_RecieveData.Empty();
 		m_ctlMsgOut.SetSel(0,-1);
 		m_ctlMsgOut.ReplaceSel(L" ");
@@ -458,6 +460,7 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	tt=CTime::GetCurrentTime();
 	m_strTime=tt.Format(L"===================\r\n%Y-%m-%d %H:%M:%S\r\n===================\r\n");
 	m_CFile.Write((LPCTSTR)m_strTime,m_strTime.GetLength()*sizeof(TCHAR));
+	m_CFile.Write((LPCTSTR)m_strStoreText,m_strStoreText.GetLength()*sizeof(TCHAR));
 	m_CFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
 	m_CFile.Flush();
 	m_CFile.Close();
