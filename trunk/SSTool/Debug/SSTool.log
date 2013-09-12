@@ -1,4 +1,4 @@
-﻿Build started 2013/9/10 20:43:33.
+﻿Build started 2013/9/12 14:02:39.
      1>Project "E:\study\VCProject\sstool\SSTool\SSTool.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\SSTool.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -10,10 +10,9 @@
      1>e:\study\vcproject\sstool\sstool\connport.cpp(242): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
      1>e:\study\vcproject\sstool\sstool\connport.cpp(296): warning C4101: 'szTmp' : unreferenced local variable
-     1>e:\study\vcproject\sstool\sstool\connport.cpp(351): warning C4018: '<' : signed/unsigned mismatch
-     1>e:\study\vcproject\sstool\sstool\connport.cpp(375): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(369): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
-     1>e:\study\vcproject\sstool\sstool\connport.cpp(376): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>e:\study\vcproject\sstool\sstool\connport.cpp(370): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  d:\program files\microsoft visual studio 10.0\vc\include\string.h(110) : see declaration of 'strcat'
        ResourceCompile:
          All outputs are up-to-date.
@@ -39,4 +38,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.82
+Time Elapsed 00:00:00.70

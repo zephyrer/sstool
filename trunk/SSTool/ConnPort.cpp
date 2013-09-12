@@ -321,45 +321,38 @@ Uint ConnPort::Hex2wChar(TCHAR *Buffer,TCHAR *szOut,int *iLen)
 {
 	int iCount=0;
 	int iDataLen=*iLen;
-	char szCharHex[MAX_SEND_SIZE]={0};
-	char *psText;
-	DWORD dwNum;
+	TCHAR szCharHex[MAX_SEND_SIZE]={0};
 
 	if(NULL==Buffer)return 0;
 
-	static const char szHexUpper[]="0123456789ABCDEF";
-	static const char szHexLow[]="abcdef";
-	char  szHexCompare[256]={0};
-
-	dwNum = WideCharToMultiByte(CP_OEMCP,NULL,Buffer,-1,NULL,0,NULL,FALSE);
-	psText = new char[dwNum];
-	if(!psText)
-	{
-		delete []psText;
-	}
-	WideCharToMultiByte (CP_OEMCP,NULL,Buffer,-1,psText,dwNum,NULL,FALSE);
+	static const TCHAR szHexUpper[]=L"0123456789ABCDEF";
+	static const TCHAR szHexLow[]=L"abcdef";
+	static TCHAR  szHexCompare[256]={0};
 	
-	for(int i=0;i<(sizeof(szHexLow)/sizeof(szHexLow[0]))-1;i++)
+	for(int i=0;i<sizeof(szHexLow)-1;i++)
 	{
 		szHexCompare[szHexLow[i]]=i+10;
 	}
 
-	for(int i=0;i<(sizeof(szHexUpper)/sizeof(szHexUpper[0]))-1;i++)
+	for(int i=0;i<sizeof(szHexUpper)-1;i++)
 	{
 		szHexCompare[szHexUpper[i]]=i;
 	}
-	for(int i=0;i<dwNum;i=i+1)
+
+	for(int i=0;i<iDataLen;i=i+1)
 	{
-		if(psText[i]!=32)
+		if(Buffer[i]!=32)
 		{
-			szCharHex[iCount++]=((szHexCompare[psText[i]])<<4)|(szHexCompare[psText[i+1]]);
+			szOut[iCount++]=((szHexCompare[Buffer[i]]<<4))|(szHexCompare[Buffer[i+1]]);
 			i++;
 		}
+		else
+		{
+			
+		}
 	}
-	dwNum = MultiByteToWideChar(CP_ACP, 0,szCharHex, -1, NULL, 0);
-	MultiByteToWideChar(CP_ACP, 0, szCharHex, -1,szOut,dwNum);
-	*iLen=iCount-1;
-	delete []psText;
+
+	*iLen=iCount;
     return TRUE;
 }
 Uint ConnPort::Char2Hex(char *Buffer,char *szOut,int iLen)
@@ -372,6 +365,7 @@ Uint ConnPort::Char2Hex(char *Buffer,char *szOut,int iLen)
 	for(int i=0;i<iLen;i++)
 	{
 		uRet=(Uint)Buffer[i];
+		memset(szHexChar,0,sizeof(szHexChar));
 		sprintf(szHexChar,"%02X ",uRet);
 		strcat(szOut,szHexChar);
 	}
@@ -398,6 +392,7 @@ void ConnPort::SendComData(char *szRevData,int iLen)
 		{
 			Char2Hex(szRevData,szTrans,iLen);
 			MultiByteToWideChar(CP_ACP,0,szTrans,-1,m_revData,MAX_BUFFER_SIZE);
+			
 		}
 		else
 		{
