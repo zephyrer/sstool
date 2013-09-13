@@ -14,6 +14,9 @@
 #define new DEBUG_NEW
 #endif
 
+#define MAX_LINE_SHOW     550
+#define MAX_HEX_LINE	  300
+
 TCHAR *strConn[]=
 {
 	L"COM1",
@@ -123,18 +126,17 @@ void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COMBO_COMLIST, m_ctrComList);
 	DDX_Control(pDX, IDC_EDIT_MSG_OUT, m_ctlMsgOut);
-	DDX_Control(pDX, IDC_TAB1, m_TabItem);
 	DDX_Control(pDX, IDC_COMBO_BAUDRATE, m_cbBaudrate);
 	DDX_Control(pDX, IDC_COMBO_STOPBITS, m_cbStopBits);
 	DDX_Control(pDX, IDC_COMBO_DATABITS, m_cbDataBits);
 	DDX_Control(pDX, IDC_COMBO_PARITY, m_cbParity);
 	DDX_Control(pDX, IDC_EDIT_SND, m_mSend);
 	DDX_Control(pDX, IDC_BUTTON_CON, m_connBtn);
-	DDX_Control(pDX, IDC_BUTTON_HEX, m_hexBtn);
 	DDX_Control(pDX, IDC_EDIT_STIME, m_sndTimer);
 	DDX_Control(pDX, IDC_CHECK_HEXSEND, m_hexSnd);
 	DDX_Control(pDX, IDC_CHECK_SC_SEND, m_scSnd);
 	DDX_Control(pDX, IDC_BUTTON_SEND, m_SendBtn);
+	DDX_Control(pDX, IDC_STATE_ON, m_StateTip);
 }
 
 BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
@@ -144,12 +146,13 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_CON, &CSSToolDlg::OnBnClickedButtonCon)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR, &CSSToolDlg::OnBnClickedButtonClear)
 	ON_BN_CLICKED(IDC_BUTTON_SEND, &CSSToolDlg::OnBnClickedButtonSend)
-	ON_BN_CLICKED(IDC_BUTTON_HEX, &CSSToolDlg::OnBnClickedButtonHex)
 	ON_BN_CLICKED(IDC_BUTTON_SAVE, &CSSToolDlg::OnBnClickedButtonSave)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_CHECK_HEXSEND, &CSSToolDlg::OnBnClickedCheckHexsend)
 	ON_BN_CLICKED(IDC_CHECK_SC_SEND, &CSSToolDlg::OnBnClickedCheckScSend)
 	ON_WM_SIZE()
+	ON_BN_CLICKED(IDC_CHECK_HEX_SHOW, &CSSToolDlg::OnBnClickedCheckHexShow)
+	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 
@@ -162,7 +165,7 @@ void CSSToolDlg::InitCommParams()
 	int		nCount=0;
 	BOOL	bFlag=FALSE;
 	int iLen=sizeof(strConn)/sizeof(strConn[0]);
-
+	memset(strConnStore,0,sizeof(strConnStore)/sizeof(strConnStore[0]));
 	for(int i=0;i<iLen;i++)
 	{
 		hComm = CreateFile(strConn[i], 0, 0, 0, 
@@ -171,7 +174,6 @@ void CSSToolDlg::InitCommParams()
          {
 			CloseHandle(hComm);
 			m_ctrComList.AddString(strConn[i]);
-			memset(strConnStore,0,sizeof(strConnStore)/sizeof(strConnStore[0]));
 			strConnStore[nCount++]=strConn[i];
 			if(!bFlag)
 			{
@@ -241,11 +243,10 @@ BOOL CSSToolDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	InitCommParams();
-	/*Init Tab control item parameter*/
-	m_TabItem.InsertItem(0,L"Picture");
-	m_TabItem.InsertItem(1,L"Sound");
-	m_TabItem.InsertItem(2,L"System");
-	/*Init Tab control item parameter*/
+
+	//setup editbox font
+	m_showFont.CreateFont(14,7,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Courier New");
+	m_ctlMsgOut.SetFont(&m_showFont,FALSE);
 
 	m_sndTimer.SetWindowTextW(L"1000");
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -289,7 +290,26 @@ void CSSToolDlg::OnPaint()
 	}
 	else
 	{
-		CDialogEx::OnPaint();
+		CPaintDC dc(this); 
+		CRect   rect; 
+		GetDlgItem(IDC_STATE_ON)->GetWindowRect(&rect);  
+		ScreenToClient(&rect);
+		CDC   dcMem;   
+		dcMem.CreateCompatibleDC(&dc);   
+		CBitmap   bmpBackground; 
+		if(m_conn.IsConnect())
+		bmpBackground.LoadBitmap(IDB_BITMAP_ON);
+		else
+		bmpBackground.LoadBitmap(IDB_BITMAP_OFF);
+		if(1)
+		{                
+			BITMAP  bitmap;   
+			bmpBackground.GetBitmap(&bitmap);
+			CBitmap   *pbmpOld=dcMem.SelectObject(&bmpBackground);   
+			dc.StretchBlt(rect.left,rect.top,rect.Width(),rect.Height(),&dcMem,0,0,   
+			bitmap.bmWidth,bitmap.bmHeight,SRCCOPY);  
+		}
+		//CDialogEx::OnPaint();
 	}
 }
 
@@ -302,7 +322,7 @@ HCURSOR CSSToolDlg::OnQueryDragIcon()
 void  CSSToolDlg::OutMsg(CString strMsg)
 {
 	int iLen=0;
-	if(m_ctlMsgOut.GetLineCount()>600)
+	if(m_ctlMsgOut.GetLineCount()>((m_conn.GetHexShowEnable()==TRUE)?MAX_HEX_LINE:MAX_LINE_SHOW))
 	{
 		m_strStoreText.Empty();
 		m_strStoreText=m_RecieveData;
@@ -329,18 +349,24 @@ void CSSToolDlg::OnBnClickedButtonCon()
 
 		if(m_conn.OpenPort(strConnStore[m_iCurConn],m_iCurBaudrate,m_iCurParity,m_iCurDataBits,m_iCurStopBits))
 		{
-			m_connBtn.SetWindowTextW(L"DISCONNECT");
+			m_connBtn.SetWindowTextW(L"断开串口");
+			m_StateTip.SetFocus();
+			m_StateTip.InvalidateRect(FALSE);
+			UpdateWindow();
 		}
 		else
 		{
-			MessageBox(L"Connect Failed!");
+			MessageBox(L"连接失败!");
 		}
 	}
 	else
 	{
 		if(m_conn.ClosePort())
 		{
-			m_connBtn.SetWindowTextW(L"CONNECT");
+			m_connBtn.SetWindowTextW(L"连接串口");
+			m_StateTip.SetFocus();
+			m_StateTip.InvalidateRect(FALSE);
+			UpdateWindow();
 		}
 	}
 }
@@ -376,24 +402,6 @@ BOOL CSSToolDlg::Char2Hex(TCHAR *szBuffer,TCHAR *szOut,int iLen)
 		wcscat(szOut,szHexChar);
 	}
     return TRUE;
-}
-void CSSToolDlg::OnBnClickedButtonHex()
-{
-	if(!m_conn.IsConnect())
-	{
-		MessageBox(L"Serial port is not connected！");
-		return;
-	}
-	if(!m_conn.GetHexShowEnable())
-	{
-		m_conn.SetHexShow(TRUE);
-		m_hexBtn.SetWindowTextW(L"DEC");
-	}
-	else
-	{
-		m_conn.SetHexShow(FALSE);
-		m_hexBtn.SetWindowTextW(L"HEX");
-	}
 }
 CString CSSToolDlg::CommonGetCurPath()  
 {   
@@ -438,16 +446,9 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	m_strTextFile=szbuf;
 	if(!m_CFile.Open(m_strTextFile,CFile::modeCreate| CFile::modeWrite))
 	{
-		AfxMessageBox(L"Create debug text fail!");
+		AfxMessageBox(L"创建文件失败！");
 		return;
 	}
-	#if 0
-	if((access(szbuf,0))==-1)
-	{
-		AfxMessageBox(L"Create debug text fail!");
-		return;
-	}
-	#endif
 	tt=CTime::GetCurrentTime();
 	m_strTime=tt.Format(L"===================\r\n%Y-%m-%d %H:%M:%S\r\n===================\r\n");
 	m_CFile.Write((LPCTSTR)m_strTime,m_strTime.GetLength()*sizeof(TCHAR));
@@ -456,17 +457,16 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	m_CFile.Flush();
 	m_CFile.Close();
 
-	MessageBox(_T("Done!"),NULL, MB_OK);
+	MessageBox(_T("已保存!"),NULL, MB_OK);
 }
 
 
 void CSSToolDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: Add your message handler code here and/or call default
+	OnBnClickedButtonSend();
 
 	CDialogEx::OnTimer(nIDEvent);
 }
-
 
 void CSSToolDlg::OnBnClickedCheckHexsend()
 {
@@ -495,7 +495,6 @@ void CSSToolDlg::OnBnClickedCheckScSend()
 		KillTimer(1);
 	}
 }
-
 
 void CSSToolDlg::OnSize(UINT nType, int cx, int cy)
 {
@@ -540,4 +539,44 @@ void CSSToolDlg::OnSize(UINT nType, int cx, int cy)
 		UpdateWindow();
 	}
 	
+}
+BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if (pMsg->message==WM_KEYDOWN)
+	{
+		if (pMsg->wParam==VK_RETURN)
+		{
+			if(m_mSend.GetFocus())
+			{
+				OnBnClickedButtonSend();
+				return FALSE;
+			}
+		}
+	}
+	return CDialogEx::PreTranslateMessage(pMsg);
+}
+void CSSToolDlg::OnBnClickedCheckHexShow()
+{
+	if(!m_conn.IsConnect())
+	{
+		MessageBox(L"串口未连接，请连接串口！");
+		return;
+	}
+	if(((CButton *)GetDlgItem(IDC_CHECK_HEX_SHOW))-> GetCheck())
+	{
+		m_conn.SetHexShow(TRUE);
+	}
+	else
+	{
+		m_conn.SetHexShow(FALSE);
+	}
+}
+
+
+BOOL CSSToolDlg::OnEraseBkgnd(CDC* pDC)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	return CDialogEx::OnEraseBkgnd(pDC);
+	//return TRUE;
 }

@@ -16,14 +16,14 @@ public:
 	BOOL GetHexSendEnable();
 	BOOL IsConnect();
 protected:
-	TCHAR m_WrriteBuffer;
-	BOOL  m_bHexShow;
-	HANDLE m_hPort;
-	HANDLE m_hThreadRead;
-	HANDLE m_hThreadWrite;
-	HANDLE m_hDataParse;
-	BOOL   m_bIsConnect;
-	BOOL   m_bHexSend;
+	TCHAR	m_WrriteBuffer;
+	BOOL	m_bHexShow;
+	HANDLE	m_hPort;
+	HANDLE	m_hThreadRead;
+	HANDLE	m_hThreadWrite;
+	HANDLE	m_hDataParse;
+	BOOL	m_bIsConnect;
+	BOOL	m_bHexSend;
 	CRITICAL_SECTION m_csRead;
 	CRITICAL_SECTION m_csWrite;
 	Uint   Char2Hex(char *Buffer,char *szOut,int iLen);
