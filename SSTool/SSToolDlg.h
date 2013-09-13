@@ -69,6 +69,7 @@ protected:
 	CString m_RecieveData;
 	CString	m_StrCurPath;
 	CString m_strStoreText;
+	CFont	m_showFont;
 	void InitCommParams();
 	CString CommonGetCurPath(); 
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
@@ -82,10 +83,8 @@ public:
 	void  OutMsg(CString strMsg);
 	afx_msg void OnBnClickedButtonClear();
 	afx_msg void OnBnClickedButtonSend();
-	afx_msg void OnBnClickedButtonHex();
 	afx_msg void OnBnClickedButtonCon();
 	CComboBox	m_ctrComList;
-	CTabCtrl	m_TabItem;
 	CComboBox	m_cbBaudrate;
 	CComboBox	m_cbStopBits;
 	CComboBox	m_cbDataBits;
@@ -93,7 +92,6 @@ public:
 	CEdit		m_ctlMsgOut;
 	CEdit		m_mSend;
 	CButton		m_connBtn;
-	CButton		m_hexBtn;
 	CEdit		m_sndTimer;
 	CButton		m_hexSnd;
 	CButton		m_scSnd;
@@ -103,5 +101,9 @@ public:
 	afx_msg void OnBnClickedCheckHexsend();
 	afx_msg void OnBnClickedCheckScSend();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	
+
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnBnClickedCheckHexShow();
+	CStatic m_StateTip;
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 };
