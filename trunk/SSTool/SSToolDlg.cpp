@@ -153,6 +153,7 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_CHECK_HEX_SHOW, &CSSToolDlg::OnBnClickedCheckHexShow)
 	ON_WM_ERASEBKGND()
+	ON_WM_DRAWITEM()
 END_MESSAGE_MAP()
 
 
@@ -319,6 +320,30 @@ HCURSOR CSSToolDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
+
+void CSSToolDlg::UpdateItem()
+{
+		CRect   rect; 
+		CString strConState;
+		GetDlgItem(IDC_STATE_ON)->GetWindowRect(&rect);  
+		ScreenToClient(&rect);
+		InvalidateRect(rect,FALSE);
+
+		GetDlgItem(IDC_STATIC_CONN_STATE)->GetWindowRect(&rect);
+		ScreenToClient(&rect);
+		strConState.Empty();
+		strConState=strConnStore[m_iCurConn];
+		if(m_conn.IsConnect())
+		{
+			strConState+=L"已连接";
+			GetDlgItem(IDC_STATIC_CONN_STATE)->SetWindowTextW(strConState);
+		}
+		else
+		{
+			GetDlgItem(IDC_STATIC_CONN_STATE)->SetWindowTextW(L"串口未连接");
+		}
+		InvalidateRect(rect,FALSE);
+}
 void  CSSToolDlg::OutMsg(CString strMsg)
 {
 	int iLen=0;
@@ -350,9 +375,7 @@ void CSSToolDlg::OnBnClickedButtonCon()
 		if(m_conn.OpenPort(strConnStore[m_iCurConn],m_iCurBaudrate,m_iCurParity,m_iCurDataBits,m_iCurStopBits))
 		{
 			m_connBtn.SetWindowTextW(L"断开串口");
-			m_StateTip.SetFocus();
-			m_StateTip.InvalidateRect(FALSE);
-			UpdateWindow();
+			UpdateItem();
 		}
 		else
 		{
@@ -364,9 +387,7 @@ void CSSToolDlg::OnBnClickedButtonCon()
 		if(m_conn.ClosePort())
 		{
 			m_connBtn.SetWindowTextW(L"连接串口");
-			m_StateTip.SetFocus();
-			m_StateTip.InvalidateRect(FALSE);
-			UpdateWindow();
+			UpdateItem();
 		}
 	}
 }
@@ -559,6 +580,7 @@ void CSSToolDlg::OnBnClickedCheckHexShow()
 {
 	if(!m_conn.IsConnect())
 	{
+		((CButton *)GetDlgItem(IDC_CHECK_HEX_SHOW))->SetCheck(FALSE);
 		MessageBox(L"串口未连接，请连接串口！");
 		return;
 	}
@@ -579,4 +601,12 @@ BOOL CSSToolDlg::OnEraseBkgnd(CDC* pDC)
 
 	return CDialogEx::OnEraseBkgnd(pDC);
 	//return TRUE;
+}
+
+
+void CSSToolDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
+{
+	// TODO: Add your message handler code here and/or call default
+	//UpdateItem();
+	CDialogEx::OnDrawItem(nIDCtl, lpDrawItemStruct);
 }
