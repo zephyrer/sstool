@@ -71,6 +71,7 @@ protected:
 	CString m_strStoreText;
 	CFont	m_showFont;
 	void InitCommParams();
+	void UpdateItem();
 	CString CommonGetCurPath(); 
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
 	// Generated message map functions
@@ -106,4 +107,5 @@ public:
 	afx_msg void OnBnClickedCheckHexShow();
 	CStatic m_StateTip;
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
 };

@@ -298,7 +298,7 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 	memset(g_WriteDataBuf,0,MAX_BUFFER_SIZE);
     while(TRUE)
     {
-		Sleep(1);
+		Sleep(2);
 		if(1==g_iExitFlag)
 		{
 			break;
