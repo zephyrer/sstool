@@ -156,6 +156,7 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CHECK_HEX_SHOW, &CSSToolDlg::OnBnClickedCheckHexShow)
 	ON_WM_ERASEBKGND()
 	ON_WM_DRAWITEM()
+	ON_CBN_CLOSEUP(IDC_COMBO_COMLIST, &CSSToolDlg::OnCbnCloseupComboComlist)
 END_MESSAGE_MAP()
 
 
@@ -485,6 +486,7 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	tt=CTime::GetCurrentTime();
 	m_strTime=tt.Format(L"===================\r\n%Y-%m-%d %H:%M:%S\r\n===================\r\n");
 	m_CFile.Write((LPCTSTR)m_strTime,m_strTime.GetLength()*sizeof(TCHAR));
+	if(!m_strStoreText.IsEmpty())
 	m_CFile.Write((LPCTSTR)m_strStoreText,m_strStoreText.GetLength()*sizeof(TCHAR));
 	m_CFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
 
@@ -622,4 +624,29 @@ void CSSToolDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
 	// TODO: Add your message handler code here and/or call default
 	//UpdateItem();
 	CDialogEx::OnDrawItem(nIDCtl, lpDrawItemStruct);
+}
+
+void CSSToolDlg::ChangeComList()
+{
+	HANDLE  hComm;
+	int		nConm=0;
+	int		nCount=0;
+	int iLen=sizeof(strConn)/sizeof(strConn[0]);
+	memset(strConnStore,0,sizeof(strConnStore)/sizeof(strConnStore[0]));
+	for(int i=0;i<iLen;i++)
+	{
+		hComm = CreateFile(strConn[i], 0, 0, 0, 
+            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+         if(INVALID_HANDLE_VALUE != hComm )
+         {
+			CloseHandle(hComm);
+			m_ctrComList.AddString(strConn[i]);
+			strConnStore[nCount++]=strConn[i];
+		 }
+	}
+}
+
+void CSSToolDlg::OnCbnCloseupComboComlist()
+{
+	ChangeComList();
 }
