@@ -72,6 +72,7 @@ protected:
 	CFont	m_showFont;
 	void InitCommParams();
 	void UpdateItem();
+	void ChangeComList();
 	CString CommonGetCurPath(); 
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
 	// Generated message map functions
@@ -108,4 +109,5 @@ public:
 	CStatic m_StateTip;
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
+	afx_msg void OnCbnCloseupComboComlist();
 };
