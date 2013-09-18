@@ -14,8 +14,10 @@
 #define new DEBUG_NEW
 #endif
 
-#define MAX_LINE_SHOW     550
-#define MAX_HEX_LINE	  300
+#define MAX_LINE_SHOW		50000
+#define MAX_HEX_LINE		50000
+#define MAX_BYTES_NUM		-1
+#define MAX_SAVE_TEXT_NUM	2
 
 TCHAR *strConn[]=
 {
@@ -125,7 +127,7 @@ void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COMBO_COMLIST, m_ctrComList);
-	DDX_Control(pDX, IDC_EDIT_MSG_OUT, m_ctlMsgOut);
+	DDX_Control(pDX, IDC_EDIT_MSG_OUT,	m_ctlMsgOut);
 	DDX_Control(pDX, IDC_COMBO_BAUDRATE, m_cbBaudrate);
 	DDX_Control(pDX, IDC_COMBO_STOPBITS, m_cbStopBits);
 	DDX_Control(pDX, IDC_COMBO_DATABITS, m_cbDataBits);
@@ -244,7 +246,7 @@ BOOL CSSToolDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	InitCommParams();
-
+	m_ctlMsgOut.SetLimitText(MAX_BYTES_NUM);
 	//setup editbox font
 	m_showFont.CreateFont(14,7,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Courier New");
 	m_ctlMsgOut.SetFont(&m_showFont,FALSE);
@@ -439,12 +441,17 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	
 	int nLength=0;
 	CFile m_CFile;
-	char szbuf[20];
+	char szbuf[22];
+	int nLoop=0;
 	CTime tt;
 	CString m_strTime;
 	CString m_strTextFile;
 
-
+	if(m_RecieveData.IsEmpty())
+	{
+		AfxMessageBox(L"串口没有接收到数据，保存失败！");
+		return;
+	}
 	m_StrCurPath=CommonGetCurPath();
 	nLength=m_StrCurPath.GetLength();
 
@@ -458,11 +465,16 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	CreateDirectory(m_StrCurPath,NULL);
 	SetCurrentDirectory(m_StrCurPath);
 
-	for(int nLoop=1;nLoop<80;nLoop++)
+	for(nLoop=1;nLoop<MAX_SAVE_TEXT_NUM;nLoop++)
 	{
-		sprintf(szbuf,"SaveDebugText%02d.txt",nLoop);
+		sprintf(szbuf,"SaveDebugText_%03d.txt",nLoop);
 		if((access(szbuf,0)==-1))
 			break;
+	}
+	if(MAX_SAVE_TEXT_NUM==nLoop)
+	{
+		AfxMessageBox(L"保存的文件数过多，请先清理！");
+		return;
 	}
 	m_strTextFile=szbuf;
 	if(!m_CFile.Open(m_strTextFile,CFile::modeCreate| CFile::modeWrite))
@@ -475,6 +487,7 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	m_CFile.Write((LPCTSTR)m_strTime,m_strTime.GetLength()*sizeof(TCHAR));
 	m_CFile.Write((LPCTSTR)m_strStoreText,m_strStoreText.GetLength()*sizeof(TCHAR));
 	m_CFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
+
 	m_CFile.Flush();
 	m_CFile.Close();
 
