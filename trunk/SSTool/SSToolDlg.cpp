@@ -17,7 +17,7 @@
 #define MAX_LINE_SHOW		50000
 #define MAX_HEX_LINE		50000
 #define MAX_BYTES_NUM		-1
-#define MAX_SAVE_TEXT_NUM	2
+#define MAX_SAVE_TEXT_NUM	500
 
 TCHAR *strConn[]=
 {
@@ -119,7 +119,7 @@ END_MESSAGE_MAP()
 CSSToolDlg::CSSToolDlg(const CString& str,CWnd* pParent /*=NULL*/)
 	: CDialogEx(CSSToolDlg::IDD, pParent)
 {
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_hIcon = AfxGetApp()->LoadIcon(IDI_MAINFRAME);
 	m_strCaption = str;
 	m_iCurConn=0;
 }
@@ -629,21 +629,22 @@ void CSSToolDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
 void CSSToolDlg::ChangeComList()
 {
 	HANDLE  hComm;
-	int		nConm=0;
 	int		nCount=0;
 	int iLen=sizeof(strConn)/sizeof(strConn[0]);
 	memset(strConnStore,0,sizeof(strConnStore)/sizeof(strConnStore[0]));
+
 	for(int i=0;i<iLen;i++)
 	{
 		hComm = CreateFile(strConn[i], 0, 0, 0, 
             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-         if(INVALID_HANDLE_VALUE != hComm )
+         if(INVALID_HANDLE_VALUE != hComm)
          {
 			CloseHandle(hComm);
 			m_ctrComList.AddString(strConn[i]);
 			strConnStore[nCount++]=strConn[i];
 		 }
 	}
+	m_ctrComList.UpdateData();
 }
 
 void CSSToolDlg::OnCbnCloseupComboComlist()

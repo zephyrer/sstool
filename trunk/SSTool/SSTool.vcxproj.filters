@@ -16,13 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
-    <None Include="res\SSTool.rc2">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="res\SSTool.ico">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\icon1.ico">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\icon_off.ico">

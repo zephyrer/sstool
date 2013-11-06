@@ -99,10 +99,8 @@
     <None Include="res\bitmap1.bmp" />
     <None Include="res\bitmap_o.bmp" />
     <None Include="res\bmp00001.bmp" />
-    <None Include="res\icon1.ico" />
     <None Include="res\icon_off.ico" />
     <None Include="res\SSTool.ico" />
-    <None Include="res\SSTool.rc2" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConnPort.h" />
