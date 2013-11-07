@@ -39,6 +39,8 @@ ConnPort::ConnPort(void)
 {
 	m_bIsConnect=FALSE;
 	m_bHexSend=FALSE;
+	m_wCount	=0;
+	m_rCount	=0;
 }
 
 ConnPort::~ConnPort(void)
@@ -112,6 +114,8 @@ BOOL ConnPort::ClosePort()
 			TerminateThread(m_hThreadRead,0);
 			TerminateThread(m_hThreadWrite,0);
 			TerminateThread(m_hDataParse,0);
+			TerminateThread(m_hMoniter,0);
+			
 			break;
 		}
 		else if(1==g_rExitFlag && 1==g_wExitFlag && 1==g_pExitFlag)
@@ -129,11 +133,14 @@ BOOL ConnPort::ClosePort()
 	if(NULL==m_hThreadRead)return FALSE;
 	if(NULL==m_hThreadWrite)return FALSE;
 	if(NULL==m_hDataParse)return FALSE;
+	if(NULL==m_hMoniter)return FALSE;
 
     if(!CloseHandle(m_hPort))return FALSE;
     if(!CloseHandle(m_hThreadRead))return FALSE;
     if(!CloseHandle(m_hThreadWrite))return FALSE;
 	if(!CloseHandle(m_hDataParse))return FALSE;
+	if(!CloseHandle(m_hMoniter))return FALSE;
+
 	m_bIsConnect=FALSE;
     return TRUE;
 }
@@ -169,13 +176,14 @@ BOOL ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,in
 
    if(!ConfigPort(iBaudrate,iParity,iDataBits,iStopBits)) return FALSE;
    if(!CommTimeouts())return FALSE;
-
    InitializeCriticalSection(&m_csRead);
    InitializeCriticalSection(&m_csWrite);
   //创建读写线程
-   m_hThreadRead  = CreateThread(0,0,(LPTHREAD_START_ROUTINE)ReadThreadProc, (void*)this,0,&dwThreadID);
-   m_hThreadWrite = CreateThread(0,0,(LPTHREAD_START_ROUTINE)WriteThreadProc,(void*)this,0,&dwThreadID);
-   m_hDataParse = CreateThread(0,0,(LPTHREAD_START_ROUTINE)PareDataProc,(void*)this,0,&dwThreadID);
+   m_hThreadRead	=	CreateThread(0,0,(LPTHREAD_START_ROUTINE)ReadThreadProc,	(void*)this,0,&dwThreadID);
+   m_hThreadWrite	=	CreateThread(0,0,(LPTHREAD_START_ROUTINE)WriteThreadProc,	(void*)this,0,&dwThreadID);
+   m_hDataParse		=   CreateThread(0,0,(LPTHREAD_START_ROUTINE)PareDataProc,		(void*)this,0,&dwThreadID);
+   m_hMoniter		=   CreateThread(0,0,(LPTHREAD_START_ROUTINE)MoniterConProc,	(void*)this,0,&dwThreadID);
+   
    m_bIsConnect=TRUE;
    return TRUE;
 }
@@ -218,6 +226,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 					}
 					g_ReadDataBuf[g_iRInPos]=RXBuffer;
 					g_iRInPos=((g_iRInPos++)%MAX_BUFFER_SIZE);
+					pThis->m_rCount++;
 					dwLength--;
 				}
 				LeaveCriticalSection(&pThis->m_csRead);
@@ -286,6 +295,7 @@ BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
 		{
 			g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szWriteData[iLoop];
 		}
+		m_wCount++;
 	}
 	return  TRUE;
 }
@@ -314,6 +324,29 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 		}
 		LeaveCriticalSection(&pThis->m_csWrite);
     }
+	g_wExitFlag=1;
+	return 0;
+}
+
+DWORD  ConnPort::MoniterConProc(LPVOID lpParameter)
+{
+	ConnPort *pThis=(ConnPort *)lpParameter;
+	HANDLE hComm;
+	while(1)
+	{
+		Sleep(5);
+
+		if(1==g_iExitFlag)
+		{
+			break;
+		}
+		hComm = CreateFile(L"COM3", 0, 0, 0, 
+				OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		if(INVALID_HANDLE_VALUE != hComm )
+		pThis->m_bIsConnect=FALSE;
+
+		
+	}
 	g_wExitFlag=1;
 	return 0;
 }
@@ -387,12 +420,11 @@ void ConnPort::SendComData(char *szRevData,int iLen)
 
         CSSToolDlg		*dlg=(CSSToolDlg *)AfxGetApp()->GetMainWnd();
         memset(m_revData,0,MAX_BUFFER_SIZE);
-		memset(szTrans,0,MAX_BUFFER_SIZE);
+		memset(szTrans,	 0,MAX_BUFFER_SIZE);
 		if(m_bHexShow)
 		{
 			Char2Hex(szRevData,szTrans,iLen);
-			MultiByteToWideChar(CP_ACP,0,szTrans,-1,m_revData,MAX_BUFFER_SIZE);
-			
+			MultiByteToWideChar(CP_ACP,0,szTrans,-1,m_revData,MAX_BUFFER_SIZE);	
 		}
 		else
 		{
@@ -411,4 +443,18 @@ void ConnPort::SetHexSend(BOOL bHex)
 BOOL ConnPort::GetHexSendEnable()
 {
 	return m_bHexSend;
+}
+
+int  ConnPort::GetConnReadBytes()
+{
+	return m_rCount;
+}
+int  ConnPort::GetConnWriteBytes()
+{
+	return m_wCount;
+}
+void ConnPort::EmptyBytesCount()
+{
+	m_rCount=0;
+	m_wCount=0;
 }
