@@ -253,7 +253,7 @@ BOOL CSSToolDlg::OnInitDialog()
 	m_ctlMsgOut.SetFont(&m_showFont,FALSE);
 
 	m_sndTimer.SetWindowTextW(L"1000");
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	return TRUE;
 }
 
 void CSSToolDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -327,24 +327,44 @@ HCURSOR CSSToolDlg::OnQueryDragIcon()
 void CSSToolDlg::UpdateItem()
 {
 		CRect   rect; 
-		CString strConState;
+		CString strUpdate;
+		int iReadBytes=0;
+		int iWriteBytes=0;
+
+		iReadBytes=m_conn.GetConnReadBytes();
+		iWriteBytes=m_conn.GetConnWriteBytes();
+
 		GetDlgItem(IDC_STATE_ON)->GetWindowRect(&rect);  
 		ScreenToClient(&rect);
 		InvalidateRect(rect,FALSE);
 
 		GetDlgItem(IDC_STATIC_CONN_STATE)->GetWindowRect(&rect);
 		ScreenToClient(&rect);
-		strConState.Empty();
-		strConState=strConnStore[m_iCurConn];
+		strUpdate.Empty();
+		strUpdate=strConnStore[m_iCurConn];
 		if(m_conn.IsConnect())
 		{
-			strConState+=L"已连接";
-			GetDlgItem(IDC_STATIC_CONN_STATE)->SetWindowTextW(strConState);
+			strUpdate+=L"已连接";
+			GetDlgItem(IDC_STATIC_CONN_STATE)->SetWindowTextW(strUpdate);
 		}
 		else
 		{
 			GetDlgItem(IDC_STATIC_CONN_STATE)->SetWindowTextW(L"串口未连接");
 		}
+
+		GetDlgItem(IDC_STATIC_READ_COUNT)->GetWindowRect(&rect);
+		ScreenToClient(&rect);
+		strUpdate.Empty();
+		strUpdate.Format(L"%d",iReadBytes);
+		GetDlgItem(IDC_STATIC_READ_COUNT)->SetWindowTextW(strUpdate);
+		InvalidateRect(rect,FALSE);
+
+
+		GetDlgItem(IDC_STATIC_WRITE_COUNT)->GetWindowRect(&rect);
+		ScreenToClient(&rect);
+		strUpdate.Empty();
+		strUpdate.Format(L"%d",iWriteBytes);
+		GetDlgItem(IDC_STATIC_WRITE_COUNT)->SetWindowTextW(strUpdate);
 		InvalidateRect(rect,FALSE);
 }
 void  CSSToolDlg::OutMsg(CString strMsg)
@@ -379,6 +399,7 @@ void CSSToolDlg::OnBnClickedButtonCon()
 		{
 			m_connBtn.SetWindowTextW(L"断开串口");
 			UpdateItem();
+			SetTimer(2,500,NULL);
 		}
 		else
 		{
@@ -399,7 +420,9 @@ void CSSToolDlg::OnBnClickedButtonClear()
 	m_RecieveData.Empty();
 	m_ctlMsgOut.SetSel(0,-1);
 	m_ctlMsgOut.ReplaceSel(L" ");
+	m_conn.EmptyBytesCount();
 	UpdateData(FALSE);
+	UpdateItem();
 }
 
 void CSSToolDlg::OnBnClickedButtonSend()
@@ -499,7 +522,14 @@ void CSSToolDlg::OnBnClickedButtonSave()
 
 void CSSToolDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	OnBnClickedButtonSend();
+	if(1==nIDEvent)
+	{
+		OnBnClickedButtonSend();
+	}
+	else
+	{
+		UpdateItem();
+	}
 
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -612,8 +642,6 @@ void CSSToolDlg::OnBnClickedCheckHexShow()
 
 BOOL CSSToolDlg::OnEraseBkgnd(CDC* pDC)
 {
-	// TODO: Add your message handler code here and/or call default
-
 	return CDialogEx::OnEraseBkgnd(pDC);
 	//return TRUE;
 }
@@ -621,7 +649,6 @@ BOOL CSSToolDlg::OnEraseBkgnd(CDC* pDC)
 
 void CSSToolDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-	// TODO: Add your message handler code here and/or call default
 	//UpdateItem();
 	CDialogEx::OnDrawItem(nIDCtl, lpDrawItemStruct);
 }
