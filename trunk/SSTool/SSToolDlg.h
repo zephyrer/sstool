@@ -72,8 +72,9 @@ protected:
 	CFont	m_showFont;
 	void InitCommParams();
 	void UpdateItem();
-	void ChangeComList();
+	void RefreshComPort();
 	CString CommonGetCurPath(); 
+	char FirstDriveFromMask (ULONG unitmask);
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
@@ -110,4 +111,5 @@ public:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
 	afx_msg void OnCbnCloseupComboComlist();
+	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 };
