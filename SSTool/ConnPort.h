@@ -18,6 +18,7 @@ public:
 	int  GetConnReadBytes();
 	int  GetConnWriteBytes();
 	void EmptyBytesCount();
+	void ResetComStatues();
 protected:
 	TCHAR	m_WrriteBuffer;
 	BOOL	m_bHexShow;
@@ -25,7 +26,6 @@ protected:
 	HANDLE	m_hThreadRead;
 	HANDLE	m_hThreadWrite;
 	HANDLE	m_hDataParse;
-	HANDLE  m_hMoniter;
 	BOOL	m_bIsConnect;
 	BOOL	m_bHexSend;
 	int		m_rCount;
@@ -40,6 +40,5 @@ protected:
 	static DWORD  ReadThreadProc(LPVOID lpParameter);
 	static DWORD  WriteThreadProc(LPVOID lpParameter);
 	static DWORD  PareDataProc(LPVOID lpParameter);
-	static DWORD  MoniterConProc(LPVOID lpParameter);
 };
 

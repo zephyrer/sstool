@@ -114,8 +114,6 @@ BOOL ConnPort::ClosePort()
 			TerminateThread(m_hThreadRead,0);
 			TerminateThread(m_hThreadWrite,0);
 			TerminateThread(m_hDataParse,0);
-			TerminateThread(m_hMoniter,0);
-			
 			break;
 		}
 		else if(1==g_rExitFlag && 1==g_wExitFlag && 1==g_pExitFlag)
@@ -133,13 +131,11 @@ BOOL ConnPort::ClosePort()
 	if(NULL==m_hThreadRead)return FALSE;
 	if(NULL==m_hThreadWrite)return FALSE;
 	if(NULL==m_hDataParse)return FALSE;
-	if(NULL==m_hMoniter)return FALSE;
 
     if(!CloseHandle(m_hPort))return FALSE;
     if(!CloseHandle(m_hThreadRead))return FALSE;
     if(!CloseHandle(m_hThreadWrite))return FALSE;
 	if(!CloseHandle(m_hDataParse))return FALSE;
-	if(!CloseHandle(m_hMoniter))return FALSE;
 
 	m_bIsConnect=FALSE;
     return TRUE;
@@ -182,7 +178,6 @@ BOOL ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,in
    m_hThreadRead	=	CreateThread(0,0,(LPTHREAD_START_ROUTINE)ReadThreadProc,	(void*)this,0,&dwThreadID);
    m_hThreadWrite	=	CreateThread(0,0,(LPTHREAD_START_ROUTINE)WriteThreadProc,	(void*)this,0,&dwThreadID);
    m_hDataParse		=   CreateThread(0,0,(LPTHREAD_START_ROUTINE)PareDataProc,		(void*)this,0,&dwThreadID);
-   m_hMoniter		=   CreateThread(0,0,(LPTHREAD_START_ROUTINE)MoniterConProc,	(void*)this,0,&dwThreadID);
    
    m_bIsConnect=TRUE;
    return TRUE;
@@ -193,7 +188,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
     DWORD		dwErrFlag;
     DWORD		dwLength;
 	DWORD		dwRead;
-    DWORD		dwModemStat;
+
     ConnPort	*pThis=(ConnPort *)p;
 	BYTE    RXBuffer;
   
@@ -303,7 +298,6 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 {
 
     DWORD dwWritten;
-	TCHAR  *szTmp;
     ConnPort *pThis=(ConnPort *)p;
 	memset(g_WriteDataBuf,0,MAX_BUFFER_SIZE);
     while(TRUE)
@@ -324,29 +318,6 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 		}
 		LeaveCriticalSection(&pThis->m_csWrite);
     }
-	g_wExitFlag=1;
-	return 0;
-}
-
-DWORD  ConnPort::MoniterConProc(LPVOID lpParameter)
-{
-	ConnPort *pThis=(ConnPort *)lpParameter;
-	HANDLE hComm;
-	while(1)
-	{
-		Sleep(5);
-
-		if(1==g_iExitFlag)
-		{
-			break;
-		}
-		hComm = CreateFile(L"COM3", 0, 0, 0, 
-				OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-		if(INVALID_HANDLE_VALUE != hComm )
-		pThis->m_bIsConnect=FALSE;
-
-		
-	}
 	g_wExitFlag=1;
 	return 0;
 }
@@ -457,4 +428,27 @@ void ConnPort::EmptyBytesCount()
 {
 	m_rCount=0;
 	m_wCount=0;
+}
+void ConnPort::ResetComStatues()
+{
+	m_rCount=0;
+	m_wCount=0;
+	m_bHexShow=FALSE;
+
+	TerminateThread(m_hThreadRead,0);
+	TerminateThread(m_hThreadWrite,0);
+	TerminateThread(m_hDataParse,0);
+
+	EscapeCommFunction(m_hPort,CLRRTS);
+    EscapeCommFunction(m_hPort,CLRDTR);
+    DeleteCriticalSection(&m_csRead);
+    DeleteCriticalSection(&m_csWrite);
+    SetCommMask(m_hPort,0);
+	
+    CloseHandle(m_hPort);
+    CloseHandle(m_hThreadRead);
+    CloseHandle(m_hThreadWrite);
+	CloseHandle(m_hDataParse);
+
+	m_bIsConnect=FALSE;
 }

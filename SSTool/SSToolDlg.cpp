@@ -9,6 +9,10 @@
 #include "ConnPort.h"
 #include "stdio.h"
 #include "io.h"
+#include "Dbt.h"
+#include <strsafe.h>
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "setupapi.lib")
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -653,12 +657,13 @@ void CSSToolDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
 	CDialogEx::OnDrawItem(nIDCtl, lpDrawItemStruct);
 }
 
-void CSSToolDlg::ChangeComList()
+void CSSToolDlg::RefreshComPort()
 {
 	HANDLE  hComm;
 	int		nCount=0;
 	int iLen=sizeof(strConn)/sizeof(strConn[0]);
 	memset(strConnStore,0,sizeof(strConnStore)/sizeof(strConnStore[0]));
+	m_ctrComList.ResetContent();
 
 	for(int i=0;i<iLen;i++)
 	{
@@ -672,9 +677,73 @@ void CSSToolDlg::ChangeComList()
 		 }
 	}
 	m_ctrComList.UpdateData();
+	m_ctrComList.SetCurSel(0);
 }
 
 void CSSToolDlg::OnCbnCloseupComboComlist()
 {
-	ChangeComList();
+	if(!m_conn.IsConnect())
+		RefreshComPort();
+}
+
+LRESULT CSSToolDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+  if( WM_DEVICECHANGE==message)
+  {  
+	CString   str;  
+	PDEV_BROADCAST_PORT pDevPort;
+	DEV_BROADCAST_HDR*   dhr   =   (DEV_BROADCAST_HDR *)lParam;  
+	switch(wParam)  
+	{ 
+		case   DBT_DEVICEARRIVAL:  
+		if(dhr->dbch_devicetype   ==   DBT_DEVTYP_PORT)  
+		{  
+			 OutMsg(L"正在检测串口，请稍后....\n");
+			 RefreshComPort();
+			 OutMsg(L"OK!!\n");
+			 
+		}  
+		break;  
+		case   DBT_DEVICEREMOVECOMPLETE:  
+		if(dhr->dbch_devicetype   ==   DBT_DEVTYP_PORT)  
+		{  
+			if(m_conn.IsConnect())
+			{
+				str.Format(L"串口连接已断开！\n");  
+				AfxMessageBox(str);
+				OutMsg(str);
+				m_conn.ResetComStatues();	
+				RefreshComPort();
+				m_connBtn.SetWindowTextW(L"连接串口");
+				UpdateItem();
+			}
+			else
+			{
+				OutMsg(L"串口连接已断开！！！\n");
+				RefreshComPort();
+				UpdateItem();
+			}
+		}  
+		break;  
+		default:  
+		break;  
+	}  
+  }  
+
+	return CDialogEx::WindowProc(message, wParam, lParam);
+}
+
+
+char CSSToolDlg::FirstDriveFromMask (ULONG unitmask)
+{
+   char i;
+
+   for (i = 0; i < 26; ++i)
+   {
+      if (unitmask & 0x1)
+         break;
+      unitmask = unitmask >> 1;
+   }
+
+   return (i + 'A');
 }
