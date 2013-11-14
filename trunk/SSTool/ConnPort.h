@@ -7,7 +7,7 @@ public:
 	ConnPort(void);
 	~ConnPort(void);
 	BOOL ClosePort();
-	BOOL OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int iStopBits);
+	int  OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int iStopBits);
 	BOOL WriteByte(BYTE byWrite);
 	BOOL WriteString(TCHAR *szWriteData,int iLen);
 	void SetHexShow(BOOL bHex);

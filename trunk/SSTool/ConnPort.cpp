@@ -144,7 +144,7 @@ BOOL ConnPort::IsConnect()
 {
 	return m_bIsConnect;
 }
-BOOL ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int iStopBits)
+int ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int iStopBits)
 {
 	 DWORD dwThreadID=0;
 	 g_iExitFlag=0;
@@ -163,6 +163,7 @@ BOOL ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,in
         wprintf(TEXT("open port failed!!!\r\n"));
         return FALSE;
     }
+
    //指定端口检测的事件集
    SetCommMask(m_hPort,EV_RXCHAR);
    //设置缓冲区，内部输入、输出缓冲区大小
