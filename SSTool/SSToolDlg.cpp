@@ -126,6 +126,7 @@ CSSToolDlg::CSSToolDlg(const CString& str,CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_MAINFRAME);
 	m_strCaption = str;
 	m_iCurConn=0;
+	m_iComCounts=0;
 }
 void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -166,7 +167,7 @@ END_MESSAGE_MAP()
 
 // CSSToolDlg message handlers
 
-void CSSToolDlg::InitCommParams()
+void CSSToolDlg::InitCommList()
 {
 	HANDLE  hComm;
 	int		nConm=0;
@@ -183,6 +184,7 @@ void CSSToolDlg::InitCommParams()
 			CloseHandle(hComm);
 			m_ctrComList.AddString(strConn[i]);
 			strConnStore[nCount++]=strConn[i];
+			m_iComCounts++;
 			if(!bFlag)
 			{
 				nConm=i;
@@ -250,7 +252,7 @@ BOOL CSSToolDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	InitCommParams();
+	InitCommList();
 	m_ctlMsgOut.SetLimitText(MAX_BYTES_NUM);
 	//setup editbox font
 	m_showFont.CreateFont(14,7,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Courier New");
@@ -334,10 +336,12 @@ void CSSToolDlg::UpdateItem()
 		CString strUpdate;
 		int iReadBytes=0;
 		int iWriteBytes=0;
+		static BOOL bComStateLast=0;
 
 		iReadBytes=m_conn.GetConnReadBytes();
 		iWriteBytes=m_conn.GetConnWriteBytes();
 
+		if(bComStateLast!=m_conn.IsConnect())
 		GetDlgItem(IDC_STATE_ON)->GetWindowRect(&rect);  
 		ScreenToClient(&rect);
 		InvalidateRect(rect,FALSE);
@@ -348,12 +352,14 @@ void CSSToolDlg::UpdateItem()
 		strUpdate=strConnStore[m_iCurConn];
 		if(m_conn.IsConnect())
 		{
-			strUpdate+=L"已连接";
+			strUpdate+=L"已打开";
 			GetDlgItem(IDC_STATIC_CONN_STATE)->SetWindowTextW(strUpdate);
+			bComStateLast=TRUE;
 		}
 		else
 		{
-			GetDlgItem(IDC_STATIC_CONN_STATE)->SetWindowTextW(L"串口未连接");
+			GetDlgItem(IDC_STATIC_CONN_STATE)->SetWindowTextW(L"串口未打开");
+			bComStateLast=FALSE;
 		}
 
 		GetDlgItem(IDC_STATIC_READ_COUNT)->GetWindowRect(&rect);
@@ -401,20 +407,27 @@ void CSSToolDlg::OnBnClickedButtonCon()
 
 		if(m_conn.OpenPort(strConnStore[m_iCurConn],m_iCurBaudrate,m_iCurParity,m_iCurDataBits,m_iCurStopBits))
 		{
-			m_connBtn.SetWindowTextW(L"断开串口");
+			m_connBtn.SetWindowTextW(L"关闭串口");
 			UpdateItem();
-			SetTimer(2,500,NULL);
+			SetTimer(2,100,NULL);
 		}
 		else
 		{
-			MessageBox(L"连接失败!");
+			if(0==m_iComCounts)
+			{
+				MessageBox(L"找不到串口!");
+			}
+			else
+			{
+				MessageBox(L"串口被占用!");
+			}
 		}
 	}
 	else
 	{
 		if(m_conn.ClosePort())
 		{
-			m_connBtn.SetWindowTextW(L"连接串口");
+			m_connBtn.SetWindowTextW(L"打开串口");
 			UpdateItem();
 		}
 	}
@@ -477,7 +490,7 @@ void CSSToolDlg::OnBnClickedButtonSave()
 
 	if(m_RecieveData.IsEmpty())
 	{
-		AfxMessageBox(L"串口没有接收到数据，保存失败！");
+		AfxMessageBox(L"没有数据，保存失败！");
 		return;
 	}
 	m_StrCurPath=CommonGetCurPath();
@@ -540,7 +553,6 @@ void CSSToolDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CSSToolDlg::OnBnClickedCheckHexsend()
 {
-	// TODO: Add your control notification handler code here
 	if(((CButton *)GetDlgItem(IDC_CHECK_HEXSEND))-> GetCheck())
 	{
 		m_conn.SetHexSend(TRUE);
@@ -630,7 +642,7 @@ void CSSToolDlg::OnBnClickedCheckHexShow()
 	if(!m_conn.IsConnect())
 	{
 		((CButton *)GetDlgItem(IDC_CHECK_HEX_SHOW))->SetCheck(FALSE);
-		MessageBox(L"串口未连接，请连接串口！");
+		MessageBox(L"串口未打开！");
 		return;
 	}
 	if(((CButton *)GetDlgItem(IDC_CHECK_HEX_SHOW))-> GetCheck())
@@ -662,6 +674,7 @@ void CSSToolDlg::RefreshComPort()
 	HANDLE  hComm;
 	int		nCount=0;
 	int iLen=sizeof(strConn)/sizeof(strConn[0]);
+	m_iComCounts=0;
 	memset(strConnStore,0,sizeof(strConnStore)/sizeof(strConnStore[0]));
 	m_ctrComList.ResetContent();
 
@@ -674,6 +687,7 @@ void CSSToolDlg::RefreshComPort()
 			CloseHandle(hComm);
 			m_ctrComList.AddString(strConn[i]);
 			strConnStore[nCount++]=strConn[i];
+			m_iComCounts++;
 		 }
 	}
 	m_ctrComList.UpdateData();
@@ -714,7 +728,7 @@ LRESULT CSSToolDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 				OutMsg(str);
 				m_conn.ResetComStatues();	
 				RefreshComPort();
-				m_connBtn.SetWindowTextW(L"连接串口");
+				m_connBtn.SetWindowTextW(L"打开串口");
 				UpdateItem();
 			}
 			else

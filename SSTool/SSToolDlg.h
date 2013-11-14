@@ -65,12 +65,13 @@ protected:
 	int	  m_iCurDataBits;
 	int	  m_iCurStopBits;
 	int	  m_iCurParity;
+	int   m_iComCounts;
 	CString	m_strCaption;
 	CString m_RecieveData;
 	CString	m_StrCurPath;
 	CString m_strStoreText;
 	CFont	m_showFont;
-	void InitCommParams();
+	void InitCommList();
 	void UpdateItem();
 	void RefreshComPort();
 	CString CommonGetCurPath(); 
