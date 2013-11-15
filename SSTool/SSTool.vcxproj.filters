@@ -31,6 +31,15 @@
     <None Include="res\bmp00001.bmp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\3.png">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\3.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\logo.ico">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SSTool.h">
