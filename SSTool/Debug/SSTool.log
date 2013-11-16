@@ -1,4 +1,4 @@
-﻿Build started 2013/11/15 11:34:14.
+﻿Build started 2013/11/16 13:56:38.
      1>Project "E:\study\VCProject\sstool\SSTool\SSTool.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\SSTool.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -29,4 +29,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.62
+Time Elapsed 00:00:01.02
