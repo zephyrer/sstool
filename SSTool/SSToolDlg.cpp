@@ -18,11 +18,6 @@
 #define new DEBUG_NEW
 #endif
 
-#define MAX_LINE_SHOW		50000
-#define MAX_HEX_LINE		50000
-#define MAX_BYTES_NUM		-1
-#define MAX_SAVE_TEXT_NUM	500
-
 TCHAR *strConn[]=
 {
 	L"COM1",
@@ -165,6 +160,9 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_CBN_CLOSEUP(IDC_COMBO_COMLIST, &CSSToolDlg::OnCbnCloseupComboComlist)
 	ON_BN_CLICKED(IDC_BUTTON_EXT, &CSSToolDlg::OnBnClickedButtonExt)
 	ON_BN_CLICKED(IDC_BUTTON_CAP, &CSSToolDlg::OnBnClickedButtonCap)
+	ON_BN_CLICKED(IDC_BTN_SEL_ALL, &CSSToolDlg::OnBnClickedBtnSelAll)
+	ON_BN_CLICKED(IDC_BTN_COPY, &CSSToolDlg::OnBnClickedBtnCopy)
+	ON_BN_CLICKED(IDC_BTN_CUT, &CSSToolDlg::OnBnClickedBtnCut)
 END_MESSAGE_MAP()
 
 
@@ -262,6 +260,8 @@ BOOL CSSToolDlg::OnInitDialog()
 	m_ctlMsgOut.SetFont(&m_showFont,FALSE);
 
 	m_sndTimer.SetWindowTextW(L"1000");
+	InitExtItems();
+	ReSizeMainWindow();
 	return TRUE;
 }
 
@@ -580,17 +580,66 @@ void CSSToolDlg::OnBnClickedCheckScSend()
 		KillTimer(1);
 	}
 }
-
-void CSSToolDlg::OnSize(UINT nType, int cx, int cy)
+void CSSToolDlg::ReSizeExtItems()
 {
-	
+	CRect rcText,rcStGroup,rcCopy,rcCap,rcCut,rcSelAll;
+	if(m_bExtEnable)
+	{
+		m_ctlMsgOut.GetWindowRect(rcText);
+		ScreenToClient(&rcText);
+
+		GetDlgItem(IDC_STATIC_EXT_GROUP)->GetWindowRect(&rcStGroup);
+		ScreenToClient(&rcStGroup);
+		rcStGroup.top=rcText.top+3;
+		rcStGroup.left=rcText.right+5;
+		rcStGroup.right=rcText.right+EXT_MENU_WIDTH-1;
+
+		GetDlgItem(IDC_BUTTON_CAP)->GetWindowRect(&rcCap);
+		ScreenToClient(&rcCap);
+		rcCap.top=rcStGroup.top+30;
+		rcCap.left=rcStGroup.left+1;
+		rcCap.bottom=rcCap.top+EXT_BTN_HEIGHT;
+		rcCap.right=rcCap.left+EXT_MENU_WIDTH-10;
+
+		GetDlgItem(IDC_BTN_SEL_ALL)->GetWindowRect(&rcSelAll);
+		ScreenToClient(&rcSelAll);
+		rcSelAll.top=rcCap.bottom+2;
+		rcSelAll.left=rcStGroup.left+1;
+		rcSelAll.right=rcSelAll.left+EXT_MENU_WIDTH/2;
+		rcSelAll.bottom=rcSelAll.top+EXT_BTN_HEIGHT;
+
+		GetDlgItem(IDC_BTN_COPY)->GetWindowRect(&rcCopy);
+		ScreenToClient(&rcCopy);
+		rcCopy.left=rcSelAll.right;
+		rcCopy.top=rcSelAll.top;
+		rcCopy.bottom=rcCopy.top+EXT_BTN_HEIGHT;
+		rcCopy.right=rcCopy.left+EXT_MENU_WIDTH/2-10;
+
+
+		GetDlgItem(IDC_BTN_CUT)->GetWindowRect(&rcCut);
+		ScreenToClient(&rcCut);
+		rcCut.left=rcStGroup.left+1;
+		rcCut.top=rcSelAll.bottom+1;
+		rcCut.bottom=rcCut.top+EXT_BTN_HEIGHT;
+		rcCut.right=rcCut.left+EXT_MENU_WIDTH/2;
+
+		GetDlgItem(IDC_STATIC_EXT_GROUP)->MoveWindow(rcStGroup);
+		GetDlgItem(IDC_BUTTON_CAP)->MoveWindow(rcCap);
+		GetDlgItem(IDC_BTN_SEL_ALL)->MoveWindow(rcSelAll);
+		GetDlgItem(IDC_BTN_COPY)->MoveWindow(rcCopy);
+		GetDlgItem(IDC_BTN_CUT)->MoveWindow(rcCut);
+
+		InvalidateRect(FALSE);
+		UpdateWindow();
+	}
+}
+void CSSToolDlg::ReSizeMainWindow()
+{
 	CRect rcConn,rcText,rcDlg,rcSendBox,rcSendBtn;
 	CWnd *pWnd;
 
-	CDialogEx::OnSize(nType, cx, cy);
-
 	pWnd = GetDlgItem(IDC_EDIT_MSG_OUT);
-	if(pWnd)
+	if(pWnd!=NULL)
 	{
 		m_connBtn.GetWindowRect(&rcConn);
 		GetClientRect(&rcDlg);
@@ -614,16 +663,29 @@ void CSSToolDlg::OnSize(UINT nType, int cx, int cy)
 
 		rcText.left=rcConn.right+3;
 		rcText.right=rcDlg.right-2;
+		if(m_bExtEnable)
+		{
+			rcText.right=rcText.right-EXT_MENU_WIDTH;
+		}
 		rcText.top=0;
 		rcText.bottom=rcSendBtn.top-2;
 
 		::MoveWindow(m_SendBtn.m_hWnd,rcSendBtn.left,rcSendBtn.top,rcSendBtn.right-rcSendBtn.left,rcSendBtn.bottom-rcSendBtn.top,0);
 		::MoveWindow(m_mSend.m_hWnd,rcSendBox.left,rcSendBox.top,rcSendBox.right-rcSendBox.left,rcSendBox.bottom-rcSendBox.top,0);
 		::MoveWindow(m_ctlMsgOut.m_hWnd,rcText.left,rcText.top,rcText.right-rcText.left,rcText.bottom-rcText.top,0);
-		InvalidateRect(FALSE);
-		UpdateWindow();
+		
+		if(!m_bExtEnable)
+		{
+			InvalidateRect(FALSE);
+			UpdateWindow();
+		}
 	}
-	
+}
+void CSSToolDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialog::OnSize(nType, cx, cy);
+	ReSizeMainWindow();
+	ReSizeExtItems();
 }
 BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 {
@@ -765,34 +827,69 @@ char CSSToolDlg::FirstDriveFromMask (ULONG unitmask)
    return (i + 'A');
 }
 
+void CSSToolDlg::InitExtItems()
+{
+	GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_HIDE);
+	GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_HIDE);
+	GetDlgItem(IDC_BTN_SEL_ALL)->ShowWindow(SW_HIDE);
+	GetDlgItem(IDC_BTN_COPY)->ShowWindow(SW_HIDE);
+	GetDlgItem(IDC_BTN_CUT)->ShowWindow(SW_HIDE);
+}
 void CSSToolDlg::OnBnClickedButtonExt()
 {
 	    CRect rcConn,rcText,rcDlg,rcSendBox,rcSendBtn;
-		m_ctlMsgOut.GetWindowRect(rcText);
+		m_ctlMsgOut.GetWindowRect(&rcText);
 		ScreenToClient(&rcText);
 
 		if(!m_bExtEnable)
 		{
-			rcText.right=rcText.right-150;
+			rcText.right=rcText.right-EXT_MENU_WIDTH;
 			m_bExtEnable=TRUE;
+			::MoveWindow(m_ctlMsgOut.m_hWnd,rcText.left,rcText.top,rcText.right-rcText.left,rcText.bottom-rcText.top,0);	
+			GetDlgItem(IDC_BUTTON_EXT)->SetWindowText(L"Òþ²Ø");
+			GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_SHOW);
 			GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_SHOW);
+			GetDlgItem(IDC_BTN_SEL_ALL)->ShowWindow(SW_SHOW);
+			GetDlgItem(IDC_BTN_COPY)->ShowWindow(SW_SHOW);
+			GetDlgItem(IDC_BTN_CUT)->ShowWindow(SW_SHOW);
+			ReSizeExtItems();
+			Invalidate(FALSE);
+			UpdateWindow();
 		}
 		else
 		{
-			rcText.right=rcText.right+150;
+			rcText.right=rcText.right+EXT_MENU_WIDTH;
 			m_bExtEnable=FALSE;
+			::MoveWindow(m_ctlMsgOut.m_hWnd,rcText.left,rcText.top,rcText.right-rcText.left,rcText.bottom-rcText.top,0);	
+			GetDlgItem(IDC_BUTTON_EXT)->SetWindowText(L"À©Õ¹");
+			GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_HIDE);
 			GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_HIDE);
+			GetDlgItem(IDC_BTN_SEL_ALL)->ShowWindow(SW_HIDE);
+			GetDlgItem(IDC_BTN_COPY)->ShowWindow(SW_HIDE);
+			GetDlgItem(IDC_BTN_CUT)->ShowWindow(SW_HIDE);	
 		}
-
-		::MoveWindow(m_ctlMsgOut.m_hWnd,rcText.left,rcText.top,rcText.right-rcText.left,rcText.bottom-rcText.top,0);
-		InvalidateRect(FALSE);
-		UpdateWindow();
-
-
 }
 
 
 void CSSToolDlg::OnBnClickedButtonCap()
+{
+	// TODO: Add your control notification handler code here
+}
+
+
+void CSSToolDlg::OnBnClickedBtnSelAll()
+{
+	m_ctlMsgOut.SetHighlight(-1,-1);
+}
+
+
+void CSSToolDlg::OnBnClickedBtnCopy()
+{
+	
+}
+
+
+void CSSToolDlg::OnBnClickedBtnCut()
 {
 	// TODO: Add your control notification handler code here
 }

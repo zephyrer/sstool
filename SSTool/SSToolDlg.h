@@ -6,6 +6,14 @@
 #include "afxwin.h"
 #include"resource.h"
 #include "afxcmn.h"
+
+#define MAX_LINE_SHOW		50000
+#define MAX_HEX_LINE		50000
+#define MAX_BYTES_NUM		-1
+#define MAX_SAVE_TEXT_NUM	500
+#define EXT_MENU_WIDTH		150
+#define EXT_BTN_HEIGHT		22
+
 typedef enum
 {
 	COM1=0,
@@ -73,8 +81,11 @@ protected:
 	CFont	m_showFont;
 	BOOL	m_bExtEnable;
 	void InitCommList();
+	void InitExtItems();
+	void ReSizeMainWindow();
 	void UpdateItem();
 	void RefreshComPort();
+	void ReSizeExtItems();
 	CString CommonGetCurPath(); 
 	char FirstDriveFromMask (ULONG unitmask);
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
@@ -116,4 +127,7 @@ public:
 	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 	afx_msg void OnBnClickedButtonExt();
 	afx_msg void OnBnClickedButtonCap();
+	afx_msg void OnBnClickedBtnSelAll();
+	afx_msg void OnBnClickedBtnCopy();
+	afx_msg void OnBnClickedBtnCut();
 };
