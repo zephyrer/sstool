@@ -22,22 +22,16 @@
     <None Include="res\icon_off.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\bitmap1.bmp">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\bitmap_o.bmp">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\bmp00001.bmp">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\3.png">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\3.bmp">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="res\logo.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\bitmap_on.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\bitmap_off.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\bmp_blank.bmp">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

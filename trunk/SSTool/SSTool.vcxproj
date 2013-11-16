@@ -96,11 +96,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
-    <None Include="res\3.bmp" />
-    <None Include="res\3.png" />
-    <None Include="res\bitmap1.bmp" />
-    <None Include="res\bitmap_o.bmp" />
-    <None Include="res\bmp00001.bmp" />
+    <None Include="res\bitmap_off.bmp" />
+    <None Include="res\bitmap_on.bmp" />
+    <None Include="res\bmp_blank.bmp" />
     <None Include="res\icon_off.ico" />
     <None Include="res\logo.ico" />
     <None Include="res\SSTool.ico" />
