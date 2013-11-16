@@ -127,6 +127,7 @@ CSSToolDlg::CSSToolDlg(const CString& str,CWnd* pParent /*=NULL*/)
 	m_strCaption = str;
 	m_iCurConn=0;
 	m_iComCounts=0;
+	m_bExtEnable=FALSE;
 }
 void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -162,6 +163,8 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_WM_ERASEBKGND()
 	ON_WM_DRAWITEM()
 	ON_CBN_CLOSEUP(IDC_COMBO_COMLIST, &CSSToolDlg::OnCbnCloseupComboComlist)
+	ON_BN_CLICKED(IDC_BUTTON_EXT, &CSSToolDlg::OnBnClickedButtonExt)
+	ON_BN_CLICKED(IDC_BUTTON_CAP, &CSSToolDlg::OnBnClickedButtonCap)
 END_MESSAGE_MAP()
 
 
@@ -760,4 +763,36 @@ char CSSToolDlg::FirstDriveFromMask (ULONG unitmask)
    }
 
    return (i + 'A');
+}
+
+void CSSToolDlg::OnBnClickedButtonExt()
+{
+	    CRect rcConn,rcText,rcDlg,rcSendBox,rcSendBtn;
+		m_ctlMsgOut.GetWindowRect(rcText);
+		ScreenToClient(&rcText);
+
+		if(!m_bExtEnable)
+		{
+			rcText.right=rcText.right-150;
+			m_bExtEnable=TRUE;
+			GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_SHOW);
+		}
+		else
+		{
+			rcText.right=rcText.right+150;
+			m_bExtEnable=FALSE;
+			GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_HIDE);
+		}
+
+		::MoveWindow(m_ctlMsgOut.m_hWnd,rcText.left,rcText.top,rcText.right-rcText.left,rcText.bottom-rcText.top,0);
+		InvalidateRect(FALSE);
+		UpdateWindow();
+
+
+}
+
+
+void CSSToolDlg::OnBnClickedButtonCap()
+{
+	// TODO: Add your control notification handler code here
 }

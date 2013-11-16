@@ -71,6 +71,7 @@ protected:
 	CString	m_StrCurPath;
 	CString m_strStoreText;
 	CFont	m_showFont;
+	BOOL	m_bExtEnable;
 	void InitCommList();
 	void UpdateItem();
 	void RefreshComPort();
@@ -113,4 +114,6 @@ public:
 	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
 	afx_msg void OnCbnCloseupComboComlist();
 	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
+	afx_msg void OnBnClickedButtonExt();
+	afx_msg void OnBnClickedButtonCap();
 };
