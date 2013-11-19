@@ -88,6 +88,7 @@ protected:
 	void ReSizeExtItems();
 	CString CommonGetCurPath(); 
 	char FirstDriveFromMask (ULONG unitmask);
+	BOOL ReleaseExe(CString strFileName,WORD wResID,CString strFileType);
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
 	// Generated message map functions
 	virtual BOOL OnInitDialog();

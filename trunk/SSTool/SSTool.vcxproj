@@ -99,8 +99,10 @@
     <None Include="res\bitmap_off.bmp" />
     <None Include="res\bitmap_on.bmp" />
     <None Include="res\bmp_blank.bmp" />
+    <None Include="res\exe2.bin" />
     <None Include="res\icon_off.ico" />
     <None Include="res\logo.ico" />
+    <None Include="res\SCTool.exe" />
     <None Include="res\SSTool.ico" />
   </ItemGroup>
   <ItemGroup>
