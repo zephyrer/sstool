@@ -699,6 +699,10 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 				return FALSE;
 			}
 		}
+		else if(pMsg->wParam == 'Z' && GetKeyState(VK_CONTROL)&& GetKeyState(VK_SHIFT))
+		{
+			OnBnClickedButtonCap();
+		}
 	}
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
@@ -870,26 +874,59 @@ void CSSToolDlg::OnBnClickedButtonExt()
 		}
 }
 
+BOOL CSSToolDlg::ReleaseExe(CString strFileName,WORD wResID,CString strFileType)   
+{     
+    DWORD   dwWrite=0;         
 
+    HANDLE hFile = CreateFile(strFileName, GENERIC_WRITE,FILE_SHARE_WRITE,NULL,   
+                                CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);   
+    if ( hFile == INVALID_HANDLE_VALUE )   
+    {   
+        return FALSE;   
+    }   
+
+    HRSRC   hrsc = FindResource(NULL, MAKEINTRESOURCE(wResID), strFileType);   
+    HGLOBAL hG = LoadResource(NULL, hrsc);   
+    DWORD   dwSize = SizeofResource( NULL, hrsc);   
+
+    // Ð´ÈëÎÄ¼þ   
+    WriteFile(hFile,hG,dwSize,&dwWrite,NULL);      
+    CloseHandle( hFile );   
+    return TRUE;   
+}
 void CSSToolDlg::OnBnClickedButtonCap()
 {
-	// TODO: Add your control notification handler code here
-}
+	CString strPath;
+	strPath.Empty();
+	strPath=CommonGetCurPath();
+	strPath+=L"\\SCTool.exe";
+	if(ReleaseExe(strPath,IDR_EXE_CAP,L"EXE"))
+		ShellExecute(NULL,L"open",L"SCTool.exe",NULL,CommonGetCurPath(),SW_SHOWNORMAL);
 
+	DeleteFile(strPath);
+
+}
 
 void CSSToolDlg::OnBnClickedBtnSelAll()
 {
-	m_ctlMsgOut.SetHighlight(-1,-1);
+	m_ctlMsgOut.SetSel(0,-1);
+	m_ctlMsgOut.SetFocus();
 }
 
 
 void CSSToolDlg::OnBnClickedBtnCopy()
 {
-	
+	if(m_ctlMsgOut.GetFocus())
+	m_ctlMsgOut.Copy();
 }
 
 
 void CSSToolDlg::OnBnClickedBtnCut()
 {
-	// TODO: Add your control notification handler code here
+	if(m_ctlMsgOut.GetFocus())
+	{
+		m_ctlMsgOut.Cut();
+		m_strStoreText.Empty();
+		m_RecieveData.Empty();
+	}
 }
