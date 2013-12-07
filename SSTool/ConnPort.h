@@ -19,9 +19,11 @@ public:
 	int  GetConnWriteBytes();
 	void EmptyBytesCount();
 	void ResetComStatues();
+	void ComEnableTimeShow(BOOL bEnable);
 protected:
 	TCHAR	m_WrriteBuffer;
 	BOOL	m_bHexShow;
+	BOOL	m_bTimeShow;
 	HANDLE	m_hPort;
 	HANDLE	m_hThreadRead;
 	HANDLE	m_hThreadWrite;

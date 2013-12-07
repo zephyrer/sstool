@@ -123,6 +123,7 @@ CSSToolDlg::CSSToolDlg(const CString& str,CWnd* pParent /*=NULL*/)
 	m_iCurConn=0;
 	m_iComCounts=0;
 	m_bExtEnable=FALSE;
+	m_bTimeShow=FALSE;
 }
 void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -163,6 +164,8 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SEL_ALL, &CSSToolDlg::OnBnClickedBtnSelAll)
 	ON_BN_CLICKED(IDC_BTN_COPY, &CSSToolDlg::OnBnClickedBtnCopy)
 	ON_BN_CLICKED(IDC_BTN_CUT, &CSSToolDlg::OnBnClickedBtnCut)
+	ON_CBN_SELCHANGE(IDC_COMBO_COMLIST, &CSSToolDlg::OnCbnSelchangeComboComlist)
+	ON_BN_CLICKED(IDC_BTN_TIME, &CSSToolDlg::OnBnClickedBtnTime)
 END_MESSAGE_MAP()
 
 
@@ -449,10 +452,21 @@ void CSSToolDlg::OnBnClickedButtonSend()
 {
 	TCHAR *szSend=NULL;
 	CString strWrite;
+	CString strEcoText;
 	m_mSend.GetWindowTextW(strWrite);
 	szSend=strWrite.GetBuffer(strWrite.GetLength());
+	m_conn.WriteString(L"\r\n",2);
 	m_conn.WriteString(szSend,strWrite.GetLength());
-
+		
+	if(m_conn.IsConnect())
+	{
+		strEcoText.Empty();
+		strEcoText=L">>>>";
+		strEcoText+=strWrite;
+		strEcoText+=L"\r\n";
+		this->OutMsg(strEcoText);
+	}
+	m_mSend.SetWindowTextW(L"");
 }
 
 BOOL CSSToolDlg::Char2Hex(TCHAR *szBuffer,TCHAR *szOut,int iLen)
@@ -582,7 +596,7 @@ void CSSToolDlg::OnBnClickedCheckScSend()
 }
 void CSSToolDlg::ReSizeExtItems()
 {
-	CRect rcText,rcStGroup,rcCopy,rcCap,rcCut,rcSelAll;
+	CRect rcText,rcStGroup,rcCopy,rcCap,rcCut,rcSelAll,rcTime;
 	if(m_bExtEnable)
 	{
 		m_ctlMsgOut.GetWindowRect(rcText);
@@ -623,11 +637,19 @@ void CSSToolDlg::ReSizeExtItems()
 		rcCut.bottom=rcCut.top+EXT_BTN_HEIGHT;
 		rcCut.right=rcCut.left+EXT_MENU_WIDTH/2;
 
+		GetDlgItem(IDC_BTN_TIME)->GetWindowRect(&rcTime);
+		ScreenToClient(&rcTime);
+		rcTime.left=rcStGroup.left+1;
+		rcTime.top=rcCut.bottom+1;
+		rcTime.bottom=rcTime.top+EXT_BTN_HEIGHT;
+		rcTime.right=rcTime.left+EXT_MENU_WIDTH-10;
+
 		GetDlgItem(IDC_STATIC_EXT_GROUP)->MoveWindow(rcStGroup);
 		GetDlgItem(IDC_BUTTON_CAP)->MoveWindow(rcCap);
 		GetDlgItem(IDC_BTN_SEL_ALL)->MoveWindow(rcSelAll);
 		GetDlgItem(IDC_BTN_COPY)->MoveWindow(rcCopy);
 		GetDlgItem(IDC_BTN_CUT)->MoveWindow(rcCut);
+		GetDlgItem(IDC_BTN_TIME)->MoveWindow(rcTime);
 
 		InvalidateRect(FALSE);
 		UpdateWindow();
@@ -760,13 +782,13 @@ void CSSToolDlg::RefreshComPort()
 		 }
 	}
 	m_ctrComList.UpdateData();
-	m_ctrComList.SetCurSel(0);
+	m_ctrComList.SetCurSel(m_ctrComList.GetCurSel());
 }
 
 void CSSToolDlg::OnCbnCloseupComboComlist()
 {
-	if(!m_conn.IsConnect())
-		RefreshComPort();
+	//if(!m_conn.IsConnect())
+	//	RefreshComPort();
 }
 
 LRESULT CSSToolDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
@@ -838,6 +860,8 @@ void CSSToolDlg::InitExtItems()
 	GetDlgItem(IDC_BTN_SEL_ALL)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_BTN_COPY)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_BTN_CUT)->ShowWindow(SW_HIDE);
+	GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_HIDE);
+
 }
 void CSSToolDlg::OnBnClickedButtonExt()
 {
@@ -856,6 +880,7 @@ void CSSToolDlg::OnBnClickedButtonExt()
 			GetDlgItem(IDC_BTN_SEL_ALL)->ShowWindow(SW_SHOW);
 			GetDlgItem(IDC_BTN_COPY)->ShowWindow(SW_SHOW);
 			GetDlgItem(IDC_BTN_CUT)->ShowWindow(SW_SHOW);
+			GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_SHOW);
 			ReSizeExtItems();
 			Invalidate(FALSE);
 			UpdateWindow();
@@ -871,6 +896,7 @@ void CSSToolDlg::OnBnClickedButtonExt()
 			GetDlgItem(IDC_BTN_SEL_ALL)->ShowWindow(SW_HIDE);
 			GetDlgItem(IDC_BTN_COPY)->ShowWindow(SW_HIDE);
 			GetDlgItem(IDC_BTN_CUT)->ShowWindow(SW_HIDE);	
+			GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_HIDE);
 		}
 }
 
@@ -900,27 +926,36 @@ void CSSToolDlg::OnBnClickedButtonCap()
 	strPath.Empty();
 	strPath=CommonGetCurPath();
 	strPath+=L"\\SCTool.exe";
+	SHELLEXECUTEINFO ShExecInfo = {0};
+	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+	ShExecInfo.hwnd = NULL;
+	ShExecInfo.lpVerb = NULL;
+	ShExecInfo.lpFile = strPath;		
+	ShExecInfo.lpParameters = L"";	
+	ShExecInfo.lpDirectory = NULL;
+	ShExecInfo.nShow = SW_SHOW;
+	ShExecInfo.hInstApp = NULL;
+
 	if(ReleaseExe(strPath,IDR_EXE_CAP,L"EXE"))
-		ShellExecute(NULL,L"open",L"SCTool.exe",NULL,CommonGetCurPath(),SW_SHOWNORMAL);
+	{
+		ShellExecuteEx(&ShExecInfo);
+		WaitForSingleObject(ShExecInfo.hProcess,INFINITE);
+	}
 
 	DeleteFile(strPath);
 
 }
-
 void CSSToolDlg::OnBnClickedBtnSelAll()
 {
 	m_ctlMsgOut.SetSel(0,-1);
 	m_ctlMsgOut.SetFocus();
 }
-
-
 void CSSToolDlg::OnBnClickedBtnCopy()
 {
 	if(m_ctlMsgOut.GetFocus())
 	m_ctlMsgOut.Copy();
 }
-
-
 void CSSToolDlg::OnBnClickedBtnCut()
 {
 	if(m_ctlMsgOut.GetFocus())
@@ -928,5 +963,31 @@ void CSSToolDlg::OnBnClickedBtnCut()
 		m_ctlMsgOut.Cut();
 		m_strStoreText.Empty();
 		m_RecieveData.Empty();
+	}
+}
+
+
+void CSSToolDlg::OnCbnSelchangeComboComlist()
+{
+	m_ctrComList.SetCurSel(m_ctrComList.GetCurSel());
+	if(m_iCurConn!=m_ctrComList.GetCurSel() && m_conn.IsConnect())
+	{
+		m_conn.ClosePort();
+		OnBnClickedButtonCon();
+	}	
+}
+void CSSToolDlg::OnBnClickedBtnTime()
+{
+	if(!m_bTimeShow)
+	{
+		m_conn.ComEnableTimeShow(TRUE);
+		m_bTimeShow=TRUE;
+		GetDlgItem(IDC_BTN_TIME)->SetWindowText(L"显示时间*");
+	}
+	else
+	{
+		m_conn.ComEnableTimeShow(FALSE);
+		m_bTimeShow=FALSE;
+		GetDlgItem(IDC_BTN_TIME)->SetWindowText(L"显示时间");
 	}
 }

@@ -80,6 +80,7 @@ protected:
 	CString m_strStoreText;
 	CFont	m_showFont;
 	BOOL	m_bExtEnable;
+	BOOL	m_bTimeShow;
 	void InitCommList();
 	void InitExtItems();
 	void ReSizeMainWindow();
@@ -131,4 +132,6 @@ public:
 	afx_msg void OnBnClickedBtnSelAll();
 	afx_msg void OnBnClickedBtnCopy();
 	afx_msg void OnBnClickedBtnCut();
+	afx_msg void OnCbnSelchangeComboComlist();
+	afx_msg void OnBnClickedBtnTime();
 };
