@@ -41,6 +41,7 @@ ConnPort::ConnPort(void)
 	m_bHexSend=FALSE;
 	m_wCount	=0;
 	m_rCount	=0;
+	m_bTimeShow =FALSE;
 }
 
 ConnPort::~ConnPort(void)
@@ -104,7 +105,6 @@ BOOL ConnPort::CommTimeouts()
 BOOL ConnPort::ClosePort()
 {
 	g_iExitFlag=1;
-	
 	while(1)
 	{
 		static int iTimeoutCount=0;
@@ -202,7 +202,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
     while(1)
     {
 		Sleep(1);
-		if(1==g_iExitFlag)
+		if(1==g_iExitFlag||!pThis->m_bIsConnect)
 		{
 			break;
 		}
@@ -242,7 +242,7 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 	while(1)
 	{
 		Sleep(0);
-		if(1==g_iExitFlag) break;
+		if(1==g_iExitFlag||!pThis->m_bIsConnect) break;
 		if(g_iROutPos==g_iRInPos) Sleep(10);
 		sprintf(&szTmp,"%c",g_ReadDataBuf[g_iROutPos]);
 		if(szTmp=='\n')
@@ -274,6 +274,8 @@ BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
 	TCHAR szCharHex[MAX_SEND_SIZE]={0};
 	if(NULL==szWriteData|| 0==iLen)
 		return FALSE;
+	if(!IsConnect())
+		return FALSE;
 
 	if(m_bHexSend)
 	{
@@ -304,7 +306,7 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
     while(TRUE)
     {
 		Sleep(2);
-		if(1==g_iExitFlag)
+		if(1==g_iExitFlag||!pThis->m_bIsConnect)
 		{
 			break;
 		}
@@ -387,6 +389,9 @@ BOOL ConnPort::GetHexShowEnable()
 void ConnPort::SendComData(char *szRevData,int iLen)
 {
 		CString     strMsg;
+		CTime		tt;
+		CString		strTime;
+		CString		strTmp;
 		TCHAR		m_revData[MAX_BUFFER_SIZE];
 		char		szTrans[MAX_BUFFER_SIZE];
 
@@ -402,9 +407,13 @@ void ConnPort::SendComData(char *szRevData,int iLen)
 		{
 			MultiByteToWideChar(CP_ACP,0,szRevData,-1,m_revData,MAX_BUFFER_SIZE);
 		}
-		strMsg=m_revData;
-        if(!strMsg.IsEmpty())
+		strTmp=m_revData;
+        if(!strTmp.IsEmpty())
         {
+			
+			tt=CTime::GetCurrentTime();
+			strTime=tt.Format(L"[%m/%d %H:%M:%S] ");
+			strMsg=(m_bTimeShow)?(strTime+strTmp):strTmp;
             dlg->OutMsg(strMsg);
         }
 }
@@ -452,4 +461,9 @@ void ConnPort::ResetComStatues()
 	CloseHandle(m_hDataParse);
 
 	m_bIsConnect=FALSE;
+}
+
+void ConnPort::ComEnableTimeShow(BOOL bEnable)
+{
+	m_bTimeShow=bEnable;
 }
