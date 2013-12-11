@@ -28,6 +28,7 @@ protected:
 	HANDLE	m_hThreadRead;
 	HANDLE	m_hThreadWrite;
 	HANDLE	m_hDataParse;
+	HANDLE	m_hWrite;
 	BOOL	m_bIsConnect;
 	BOOL	m_bHexSend;
 	int		m_rCount;

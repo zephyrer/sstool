@@ -82,20 +82,17 @@ TCHAR *strParity[]=
 	L"SPACE",
 };
 ConnPort  m_conn;
-// CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
 {
 public:
 	CAboutDlg();
 
-// Dialog Data
 	enum { IDD = IDD_ABOUTBOX };
 
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual void DoDataExchange(CDataExchange* pDX); 
 
-// Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -113,7 +110,6 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CSSToolDlg dialog
 
 CSSToolDlg::CSSToolDlg(const CString& str,CWnd* pParent /*=NULL*/)
 	: CDialogEx(CSSToolDlg::IDD, pParent)
@@ -124,6 +120,7 @@ CSSToolDlg::CSSToolDlg(const CString& str,CWnd* pParent /*=NULL*/)
 	m_iComCounts=0;
 	m_bExtEnable=FALSE;
 	m_bTimeShow=FALSE;
+	m_TimeSend=FALSE;
 }
 void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -230,9 +227,6 @@ BOOL CSSToolDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// Add "About..." menu item to system menu.
-
-	// IDM_ABOUTBOX must be in the system command range.
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
@@ -250,15 +244,12 @@ BOOL CSSToolDlg::OnInitDialog()
 		}
 	}
 	this->SetWindowText(m_strCaption);
-	// Set the icon for this dialog.  The framework does this automatically
-	//  when the application's main window is not a dialog
-	SetIcon(m_hIcon, TRUE);			// Set big icon
-	SetIcon(m_hIcon, FALSE);		// Set small icon
+	SetIcon(m_hIcon, TRUE);	
+	SetIcon(m_hIcon, FALSE);
 
-	// TODO: Add extra initialization here
 	InitCommList();
 	m_ctlMsgOut.SetLimitText(MAX_BYTES_NUM);
-	//setup editbox font
+
 	m_showFont.CreateFont(14,7,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Courier New");
 	m_ctlMsgOut.SetFont(&m_showFont,FALSE);
 
@@ -280,20 +271,14 @@ void CSSToolDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		CDialogEx::OnSysCommand(nID, lParam);
 	}
 }
-
-// If you add a minimize button to your dialog, you will need the code below
-//  to draw the icon.  For MFC applications using the document/view model,
-//  this is automatically done for you by the framework.
-
 void CSSToolDlg::OnPaint()
 {
 	if (IsIconic())
 	{
-		CPaintDC dc(this); // device context for painting
+		CPaintDC dc(this);
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
-		// Center icon in client rectangle
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
 		CRect rect;
@@ -301,7 +286,6 @@ void CSSToolDlg::OnPaint()
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// Draw the icon
 		dc.DrawIcon(x, y, m_hIcon);
 	}
 	else
@@ -329,8 +313,6 @@ void CSSToolDlg::OnPaint()
 	}
 }
 
-// The system calls this function to obtain the cursor to display while the user drags
-//  the minimized window.
 HCURSOR CSSToolDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -383,13 +365,55 @@ void CSSToolDlg::UpdateItem()
 		GetDlgItem(IDC_STATIC_WRITE_COUNT)->SetWindowTextW(strUpdate);
 		InvalidateRect(rect,FALSE);
 }
+void CSSToolDlg::EnterWorkPath()
+{
+	int   nLength=0;
+	m_StrCurPath.Empty();
+	m_StrCurPath=CommonGetCurPath();
+	nLength=m_StrCurPath.GetLength();
+
+	for(int nLoop=0;nLoop<nLength;nLoop++)
+	{
+		if(m_StrCurPath.GetAt(nLoop)=='\\')
+		{
+			CreateDirectory(m_StrCurPath.Left(nLoop+1),NULL);
+		}
+	}
+	CreateDirectory(m_StrCurPath,NULL);
+	SetCurrentDirectory(m_StrCurPath);
+}
 void  CSSToolDlg::OutMsg(CString strMsg)
 {
 	int iLen=0;
+	char *szbuf;
 	if(m_ctlMsgOut.GetLineCount()>((m_conn.GetHexShowEnable()==TRUE)?MAX_HEX_LINE:MAX_LINE_SHOW))
 	{
-		m_strStoreText.Empty();
-		m_strStoreText=m_RecieveData;
+		CFile m_CCacheFile;
+		EnterWorkPath();
+		m_StrCurPath+=L"\\cache";
+		sprintf(szbuf,"%s",m_StrCurPath);
+		if((access(szbuf,0)==-1))
+		{
+			if(!m_CCacheFile.Open(m_StrCurPath,CFile::modeCreate| CFile::modeWrite|CFile::modeNoTruncate))
+			{
+				AfxMessageBox(L"»º´æÊ§°Ü£¡");
+				return;
+			}
+		}
+		else
+		{
+			if(!m_CCacheFile.Open(m_StrCurPath,CFile::modeWrite|CFile::modeNoTruncate))
+			{
+				AfxMessageBox(L"»º´æÊ§°Ü£¡");
+				return;
+			}
+		}
+		m_CCacheFile.SeekToEnd();
+		m_CCacheFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
+
+		m_CCacheFile.Flush();
+		m_CCacheFile.Close();
+
 		m_RecieveData.Empty();
 		m_ctlMsgOut.SetSel(0,-1);
 		m_ctlMsgOut.ReplaceSel(L" ");
@@ -444,6 +468,9 @@ void CSSToolDlg::OnBnClickedButtonClear()
 	m_ctlMsgOut.SetSel(0,-1);
 	m_ctlMsgOut.ReplaceSel(L" ");
 	m_conn.EmptyBytesCount();
+	EnterWorkPath();
+	m_StrCurPath+=L"\\cache";
+	DeleteFile(m_StrCurPath);
 	UpdateData(FALSE);
 	UpdateItem();
 }
@@ -452,20 +479,18 @@ void CSSToolDlg::OnBnClickedButtonSend()
 {
 	TCHAR *szSend=NULL;
 	CString strWrite;
-	CString strEcoText;
+	strWrite.Empty();
 	m_mSend.GetWindowTextW(strWrite);
 	szSend=strWrite.GetBuffer(strWrite.GetLength());
-	m_conn.WriteString(L"\r\n",2);
+	m_conn.WriteString(L"\n",1);
 	m_conn.WriteString(szSend,strWrite.GetLength());
-		
+	m_conn.WriteString(L"\n",1);
 	if(m_conn.IsConnect())
 	{
-		strEcoText.Empty();
-		strEcoText=L">>>>";
-		strEcoText+=strWrite;
-		strEcoText+=L"\r\n";
-		this->OutMsg(strEcoText);
+		this->OutMsg(strWrite);
+		this->OutMsg(L"\r\n");
 	}
+	if(!m_TimeSend)
 	m_mSend.SetWindowTextW(L"");
 }
 
@@ -496,7 +521,6 @@ CString CSSToolDlg::CommonGetCurPath()
 }
 void CSSToolDlg::OnBnClickedButtonSave()
 {
-	
 	int nLength=0;
 	CFile m_CFile;
 	char szbuf[22];
@@ -504,25 +528,14 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	CTime tt;
 	CString m_strTime;
 	CString m_strTextFile;
+	CString m_strTmp;
 
 	if(m_RecieveData.IsEmpty())
 	{
 		AfxMessageBox(L"Ã»ÓÐÊý¾Ý£¬±£´æÊ§°Ü£¡");
 		return;
 	}
-	m_StrCurPath=CommonGetCurPath();
-	nLength=m_StrCurPath.GetLength();
-
-	for(int nLoop=0;nLoop<nLength;nLoop++)
-	{
-		if(m_StrCurPath.GetAt(nLoop)=='\\')
-		{
-			CreateDirectory(m_StrCurPath.Left(nLoop+1),NULL);
-		}
-	}
-	CreateDirectory(m_StrCurPath,NULL);
-	SetCurrentDirectory(m_StrCurPath);
-
+	EnterWorkPath();
 	for(nLoop=1;nLoop<MAX_SAVE_TEXT_NUM;nLoop++)
 	{
 		sprintf(szbuf,"SaveDebugText_%03d.txt",nLoop);
@@ -542,9 +555,9 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	}
 	tt=CTime::GetCurrentTime();
 	m_strTime=tt.Format(L"===================\r\n%Y-%m-%d %H:%M:%S\r\n===================\r\n");
+	ReadCache();
 	m_CFile.Write((LPCTSTR)m_strTime,m_strTime.GetLength()*sizeof(TCHAR));
-	if(!m_strStoreText.IsEmpty())
-	m_CFile.Write((LPCTSTR)m_strStoreText,m_strStoreText.GetLength()*sizeof(TCHAR));
+	m_CFile.Write((LPCTSTR)m_strCache,m_strCache.GetLength()*sizeof(TCHAR));
 	m_CFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
 
 	m_CFile.Flush();
@@ -553,7 +566,27 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	MessageBox(_T("ÒÑ±£´æ!"),NULL, MB_OK);
 }
 
-
+void CSSToolDlg::ReadCache()
+{
+	CFile  RFile;
+	TCHAR  szBuf;
+	m_StrCurPath.Empty();
+	EnterWorkPath();
+	m_StrCurPath+=L"\\cache";
+	RFile.Open(m_StrCurPath,CFile::modeRead|CFile::shareDenyWrite);
+	if(RFile.m_hFile==INVALID_HANDLE_VALUE)
+	{
+		return;
+	}
+	while(TRUE)
+	{
+		RFile.Read(&szBuf,1);
+		m_strCache+=szBuf;
+		if(szBuf=='\0')
+		break;
+	}
+	RFile.Close();
+}
 void CSSToolDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	if(1==nIDEvent)
@@ -588,10 +621,12 @@ void CSSToolDlg::OnBnClickedCheckScSend()
 		GetDlgItem(IDC_EDIT_STIME)->GetWindowTextW(strTimeGet);
 		int nTime=_wtoi(strTimeGet.GetBuffer()) ;
 		SetTimer(1,nTime,NULL);
+		m_TimeSend=TRUE;
 	}
 	else
 	{
 		KillTimer(1);
+		m_TimeSend=FALSE;
 	}
 }
 void CSSToolDlg::ReSizeExtItems()
@@ -718,7 +753,7 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 			if(m_mSend.GetFocus())
 			{
 				OnBnClickedButtonSend();
-				return FALSE;
+				return TRUE;
 			}
 		}
 		else if(pMsg->wParam == 'Z' && GetKeyState(VK_CONTROL)&& GetKeyState(VK_SHIFT))
@@ -756,7 +791,6 @@ BOOL CSSToolDlg::OnEraseBkgnd(CDC* pDC)
 
 void CSSToolDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-	//UpdateItem();
 	CDialogEx::OnDrawItem(nIDCtl, lpDrawItemStruct);
 }
 
@@ -787,8 +821,6 @@ void CSSToolDlg::RefreshComPort()
 
 void CSSToolDlg::OnCbnCloseupComboComlist()
 {
-	//if(!m_conn.IsConnect())
-	//	RefreshComPort();
 }
 
 LRESULT CSSToolDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
@@ -961,7 +993,6 @@ void CSSToolDlg::OnBnClickedBtnCut()
 	if(m_ctlMsgOut.GetFocus())
 	{
 		m_ctlMsgOut.Cut();
-		m_strStoreText.Empty();
 		m_RecieveData.Empty();
 	}
 }
@@ -978,6 +1009,7 @@ void CSSToolDlg::OnCbnSelchangeComboComlist()
 }
 void CSSToolDlg::OnBnClickedBtnTime()
 {
+	if(!m_conn.IsConnect()) return;
 	if(!m_bTimeShow)
 	{
 		m_conn.ComEnableTimeShow(TRUE);
