@@ -131,7 +131,9 @@ BOOL ConnPort::ClosePort()
 	if(NULL==m_hThreadRead)return FALSE;
 	if(NULL==m_hThreadWrite)return FALSE;
 	if(NULL==m_hDataParse)return FALSE;
+	
 
+	if(!CloseHandle(m_hWrite))return FALSE;
     if(!CloseHandle(m_hPort))return FALSE;
     if(!CloseHandle(m_hThreadRead))return FALSE;
     if(!CloseHandle(m_hThreadWrite))return FALSE;
@@ -179,7 +181,8 @@ int ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int
    m_hThreadRead	=	CreateThread(0,0,(LPTHREAD_START_ROUTINE)ReadThreadProc,	(void*)this,0,&dwThreadID);
    m_hThreadWrite	=	CreateThread(0,0,(LPTHREAD_START_ROUTINE)WriteThreadProc,	(void*)this,0,&dwThreadID);
    m_hDataParse		=   CreateThread(0,0,(LPTHREAD_START_ROUTINE)PareDataProc,		(void*)this,0,&dwThreadID);
-   
+   m_hWrite			=   CreateEvent(NULL,TRUE,FALSE,L"hWrite");
+   ResetEvent(m_hWrite);
    m_bIsConnect=TRUE;
    return TRUE;
 }
@@ -195,7 +198,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
   
     if(INVALID_HANDLE_VALUE==pThis->m_hPort)
     {
-        AfxMessageBox(L"the port is not opened!");
+        AfxMessageBox(L"打开串口失败!");
     }
 	memset(g_ReadDataBuf,0,MAX_BUFFER_SIZE);
 	memset(&comStat,0,sizeof(COMSTAT));
@@ -295,6 +298,7 @@ BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
 		}
 		m_wCount++;
 	}
+	SetEvent(m_hWrite);
 	return  TRUE;
 }
 DWORD ConnPort::WriteThreadProc( LPVOID p )
@@ -305,12 +309,16 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 	memset(g_WriteDataBuf,0,MAX_BUFFER_SIZE);
     while(TRUE)
     {
-		Sleep(2);
+		WaitForSingleObject(pThis->m_hWrite,INFINITE);
 		if(1==g_iExitFlag||!pThis->m_bIsConnect)
 		{
 			break;
 		}
-		if(g_iWInPos==g_iWOutPos) continue;
+		if(g_iWInPos==g_iWOutPos) 
+		{
+			ResetEvent(pThis->m_hWrite);
+			continue;
+		}
 		EnterCriticalSection(&pThis->m_csWrite);
 		if(INVALID_HANDLE_VALUE!=pThis->m_hPort)
 		{
