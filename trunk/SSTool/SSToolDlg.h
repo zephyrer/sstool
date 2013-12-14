@@ -13,6 +13,7 @@
 #define MAX_SAVE_TEXT_NUM	500
 #define EXT_MENU_WIDTH		150
 #define EXT_BTN_HEIGHT		22
+#define CACHE_FILE_NAME		L"\\sstool_cache.txt"
 
 typedef enum
 {
@@ -76,7 +77,6 @@ protected:
 	int   m_iComCounts;
 	CString	m_strCaption;
 	CString m_RecieveData;
-	CString	m_StrCurPath;
 	CString m_strCache;
 	CFont	m_showFont;
 	BOOL	m_bExtEnable;
@@ -90,7 +90,7 @@ protected:
 	void RefreshComPort();
 	void ReSizeExtItems();
 	CString CommonGetCurPath(); 
-	void  ReadCache(); 
+	CString  ReadCache(); 
 	char FirstDriveFromMask (ULONG unitmask);
 	BOOL ReleaseExe(CString strFileName,WORD wResID,CString strFileType);
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
