@@ -163,6 +163,7 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_CUT, &CSSToolDlg::OnBnClickedBtnCut)
 	ON_CBN_SELCHANGE(IDC_COMBO_COMLIST, &CSSToolDlg::OnCbnSelchangeComboComlist)
 	ON_BN_CLICKED(IDC_BTN_TIME, &CSSToolDlg::OnBnClickedBtnTime)
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -845,7 +846,6 @@ LRESULT CSSToolDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
   if( WM_DEVICECHANGE==message)
   {  
 	CString   str;  
-	PDEV_BROADCAST_PORT pDevPort;
 	DEV_BROADCAST_HDR*   dhr   =   (DEV_BROADCAST_HDR *)lParam;  
 	switch(wParam)  
 	{ 
@@ -898,7 +898,6 @@ char CSSToolDlg::FirstDriveFromMask (ULONG unitmask)
          break;
       unitmask = unitmask >> 1;
    }
-
    return (i + 'A');
 }
 
@@ -1039,4 +1038,14 @@ void CSSToolDlg::OnBnClickedBtnTime()
 		m_bTimeShow=FALSE;
 		GetDlgItem(IDC_BTN_TIME)->SetWindowText(L"œ‘ æ ±º‰");
 	}
+}
+void CSSToolDlg::OnClose()
+{
+	CString strPath;
+	strPath.Empty();
+	strPath=CommonGetCurPath();
+	strPath+=CACHE_FILE_NAME;
+	DeleteFile(strPath);
+
+	CDialogEx::OnClose();
 }
