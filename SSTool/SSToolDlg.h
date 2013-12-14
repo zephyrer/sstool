@@ -137,4 +137,5 @@ public:
 	afx_msg void OnBnClickedBtnCut();
 	afx_msg void OnCbnSelchangeComboComlist();
 	afx_msg void OnBnClickedBtnTime();
+	afx_msg void OnClose();
 };
