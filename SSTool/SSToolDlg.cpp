@@ -367,47 +367,55 @@ void CSSToolDlg::UpdateItem()
 }
 void CSSToolDlg::EnterWorkPath()
 {
-	int   nLength=0;
-	m_StrCurPath.Empty();
-	m_StrCurPath=CommonGetCurPath();
-	nLength=m_StrCurPath.GetLength();
+	int		nLength=0;
+	CString strPath;
+	strPath.Empty();
+	strPath=CommonGetCurPath();
+	nLength=strPath.GetLength();
 
 	for(int nLoop=0;nLoop<nLength;nLoop++)
 	{
-		if(m_StrCurPath.GetAt(nLoop)=='\\')
+		if(strPath.GetAt(nLoop)=='\\')
 		{
-			CreateDirectory(m_StrCurPath.Left(nLoop+1),NULL);
+			CreateDirectory(strPath.Left(nLoop+1),NULL);
 		}
 	}
-	CreateDirectory(m_StrCurPath,NULL);
-	SetCurrentDirectory(m_StrCurPath);
+	CreateDirectory(strPath,NULL);
+	SetCurrentDirectory(strPath);
 }
 void  CSSToolDlg::OutMsg(CString strMsg)
 {
 	int iLen=0;
 	char *szbuf;
+	CString strPath;
 	if(m_ctlMsgOut.GetLineCount()>((m_conn.GetHexShowEnable()==TRUE)?MAX_HEX_LINE:MAX_LINE_SHOW))
 	{
 		CFile m_CCacheFile;
 		EnterWorkPath();
-		m_StrCurPath+=L"\\cache";
-		sprintf(szbuf,"%s",m_StrCurPath);
+		strPath.Empty();
+		strPath=CommonGetCurPath();
+		strPath+=CACHE_FILE_NAME;
+		sprintf(szbuf,"%s",strPath);
 		if((access(szbuf,0)==-1))
 		{
-			if(!m_CCacheFile.Open(m_StrCurPath,CFile::modeCreate| CFile::modeWrite|CFile::modeNoTruncate))
+			if(!m_CCacheFile.Open(strPath,CFile::modeCreate| CFile::modeWrite|CFile::modeNoTruncate))
 			{
 				AfxMessageBox(L"»º´æÊ§°Ü£¡");
 				return;
 			}
+			DWORD FileAttr = GetFileAttributes(strPath);
+			SetFileAttributes(strPath,FileAttr | FILE_ATTRIBUTE_HIDDEN);
 		}
 		else
 		{
-			if(!m_CCacheFile.Open(m_StrCurPath,CFile::modeWrite|CFile::modeNoTruncate))
+			if(!m_CCacheFile.Open(strPath,CFile::modeWrite|CFile::modeNoTruncate))
 			{
 				AfxMessageBox(L"»º´æÊ§°Ü£¡");
 				return;
 			}
 		}
+
+
 		m_CCacheFile.SeekToEnd();
 		m_CCacheFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
 
@@ -464,13 +472,16 @@ void CSSToolDlg::OnBnClickedButtonCon()
 }
 void CSSToolDlg::OnBnClickedButtonClear()
 {
+	CString strPath;
+	strPath.Empty();
+	m_strCache.Empty();
 	m_RecieveData.Empty();
 	m_ctlMsgOut.SetSel(0,-1);
 	m_ctlMsgOut.ReplaceSel(L" ");
 	m_conn.EmptyBytesCount();
-	EnterWorkPath();
-	m_StrCurPath+=L"\\cache";
-	DeleteFile(m_StrCurPath);
+	strPath=CommonGetCurPath();
+	strPath+=CACHE_FILE_NAME;
+	DeleteFile(strPath);
 	UpdateData(FALSE);
 	UpdateItem();
 }
@@ -555,9 +566,11 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	}
 	tt=CTime::GetCurrentTime();
 	m_strTime=tt.Format(L"===================\r\n%Y-%m-%d %H:%M:%S\r\n===================\r\n");
-	ReadCache();
+	m_strCache.Empty();
+	m_strCache=ReadCache();
+
 	m_CFile.Write((LPCTSTR)m_strTime,m_strTime.GetLength()*sizeof(TCHAR));
-	m_CFile.Write((LPCTSTR)m_strCache,m_strCache.GetLength()*sizeof(TCHAR));
+	m_CFile.Write(m_strCache,m_strCache.GetLength()*sizeof(TCHAR));
 	m_CFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
 
 	m_CFile.Flush();
@@ -566,26 +579,30 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	MessageBox(_T("ÒÑ±£´æ!"),NULL, MB_OK);
 }
 
-void CSSToolDlg::ReadCache()
+CString CSSToolDlg::ReadCache()
 {
-	CFile  RFile;
-	TCHAR  szBuf;
-	m_StrCurPath.Empty();
-	EnterWorkPath();
-	m_StrCurPath+=L"\\cache";
-	RFile.Open(m_StrCurPath,CFile::modeRead|CFile::shareDenyWrite);
+	CFile	RFile;
+	char	szBuf;
+	CString strPath;
+	CString strCache;
+	CString szTmp;
+	strPath.Empty();
+	strPath=CommonGetCurPath();
+	strPath+=CACHE_FILE_NAME;
+	RFile.Open(strPath,CFile::modeRead|CFile::shareDenyWrite);
 	if(RFile.m_hFile==INVALID_HANDLE_VALUE)
 	{
-		return;
+		return NULL;
 	}
-	while(TRUE)
+	while(RFile.Read(&szBuf,1)>0)
 	{
-		RFile.Read(&szBuf,1);
-		m_strCache+=szBuf;
-		if(szBuf=='\0')
-		break;
+		szTmp.Format(L"%c",szBuf);
+		strCache+=szTmp;
 	}
+	strCache+=L"\r\n";
 	RFile.Close();
+
+	return strCache;
 }
 void CSSToolDlg::OnTimer(UINT_PTR nIDEvent)
 {
