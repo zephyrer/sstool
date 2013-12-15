@@ -121,6 +121,7 @@ CSSToolDlg::CSSToolDlg(const CString& str,CWnd* pParent /*=NULL*/)
 	m_bExtEnable=FALSE;
 	m_bTimeShow=FALSE;
 	m_TimeSend=FALSE;
+	m_bSendBR=FALSE;
 }
 void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -164,6 +165,8 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_COMBO_COMLIST, &CSSToolDlg::OnCbnSelchangeComboComlist)
 	ON_BN_CLICKED(IDC_BTN_TIME, &CSSToolDlg::OnBnClickedBtnTime)
 	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_CHECK_BR, &CSSToolDlg::OnBnClickedCheckBr)
+	ON_EN_CHANGE(IDC_EDIT_STIME, &CSSToolDlg::OnEnChangeEditStime)
 END_MESSAGE_MAP()
 
 
@@ -387,7 +390,7 @@ void CSSToolDlg::EnterWorkPath()
 void  CSSToolDlg::OutMsg(CString strMsg)
 {
 	int iLen=0;
-	char *szbuf;
+	char *szbuf=NULL;
 	CString strPath;
 	if(m_ctlMsgOut.GetLineCount()>((m_conn.GetHexShowEnable()==TRUE)?MAX_HEX_LINE:MAX_LINE_SHOW))
 	{
@@ -459,6 +462,8 @@ void CSSToolDlg::OnBnClickedButtonCon()
 			else
 			{
 				MessageBox(L"串口被占用!");
+				m_connBtn.SetWindowTextW(L"打开串口");
+				UpdateItem();
 			}
 		}
 	}
@@ -496,7 +501,8 @@ void CSSToolDlg::OnBnClickedButtonSend()
 	szSend=strWrite.GetBuffer(strWrite.GetLength());
 	m_conn.WriteString(L"\n",1);
 	m_conn.WriteString(szSend,strWrite.GetLength());
-	m_conn.WriteString(L"\n",1);
+	if(TRUE==m_bSendBR)
+		m_conn.WriteString(L"\n",1);
 	if(m_conn.IsConnect())
 	{
 		this->OutMsg(strWrite);
@@ -535,7 +541,7 @@ void CSSToolDlg::OnBnClickedButtonSave()
 {
 	int nLength=0;
 	CFile m_CFile;
-	char szbuf[22];
+	char szbuf[100];
 	int nLoop=0;
 	CTime tt;
 	CString m_strTime;
@@ -548,12 +554,10 @@ void CSSToolDlg::OnBnClickedButtonSave()
 		return;
 	}
 	EnterWorkPath();
-	for(nLoop=1;nLoop<MAX_SAVE_TEXT_NUM;nLoop++)
-	{
-		sprintf(szbuf,"SaveDebugText_%03d.txt",nLoop);
-		if((access(szbuf,0)==-1))
-			break;
-	}
+	tt=CTime::GetCurrentTime();
+
+	sprintf(szbuf,"SSToolText_%d-%d-%d-%d-%d-%d.txt",
+		tt.GetYear(),tt.GetMonth(),tt.GetDay(),tt.GetHour(),tt.GetMinute(),tt.GetSecond());
 	if(MAX_SAVE_TEXT_NUM==nLoop)
 	{
 		AfxMessageBox(L"保存的文件数过多，请先清理！");
@@ -607,7 +611,7 @@ CString CSSToolDlg::ReadCache()
 }
 void CSSToolDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	if(1==nIDEvent)
+	if(m_TimeHandle==nIDEvent)
 	{
 		OnBnClickedButtonSend();
 	}
@@ -638,7 +642,7 @@ void CSSToolDlg::OnBnClickedCheckScSend()
 	{
 		GetDlgItem(IDC_EDIT_STIME)->GetWindowTextW(strTimeGet);
 		int nTime=_wtoi(strTimeGet.GetBuffer()) ;
-		SetTimer(1,nTime,NULL);
+		m_TimeHandle=SetTimer(1,nTime,NULL);
 		m_TimeSend=TRUE;
 	}
 	else
@@ -1046,6 +1050,26 @@ void CSSToolDlg::OnClose()
 	strPath=CommonGetCurPath();
 	strPath+=CACHE_FILE_NAME;
 	DeleteFile(strPath);
-
+	m_bSendBR=FALSE;
 	CDialogEx::OnClose();
+}
+
+
+void CSSToolDlg::OnBnClickedCheckBr()
+{
+	if(((CButton *)GetDlgItem(IDC_CHECK_BR))-> GetCheck())
+	{
+		m_bSendBR=TRUE;
+	}
+	else
+	{
+		m_bSendBR=FALSE;
+	}
+}
+
+void CSSToolDlg::OnEnChangeEditStime()
+{
+	if(m_TimeHandle)
+	KillTimer(m_TimeHandle);
+	OnBnClickedCheckScSend();
 }

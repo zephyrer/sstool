@@ -82,6 +82,8 @@ protected:
 	BOOL	m_bExtEnable;
 	BOOL	m_bTimeShow;
 	BOOL	m_TimeSend;
+	BOOL	m_bSendBR;
+	UINT_PTR m_TimeHandle;
 	void InitCommList();
 	void InitExtItems();
 	void ReSizeMainWindow();
@@ -138,4 +140,6 @@ public:
 	afx_msg void OnCbnSelchangeComboComlist();
 	afx_msg void OnBnClickedBtnTime();
 	afx_msg void OnClose();
+	afx_msg void OnBnClickedCheckBr();
+	afx_msg void OnEnChangeEditStime();
 };
