@@ -159,9 +159,7 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_CBN_CLOSEUP(IDC_COMBO_COMLIST, &CSSToolDlg::OnCbnCloseupComboComlist)
 	ON_BN_CLICKED(IDC_BUTTON_EXT, &CSSToolDlg::OnBnClickedButtonExt)
 	ON_BN_CLICKED(IDC_BUTTON_CAP, &CSSToolDlg::OnBnClickedButtonCap)
-	ON_BN_CLICKED(IDC_BTN_SEL_ALL, &CSSToolDlg::OnBnClickedBtnSelAll)
 	ON_BN_CLICKED(IDC_BTN_COPY, &CSSToolDlg::OnBnClickedBtnCopy)
-	ON_BN_CLICKED(IDC_BTN_CUT, &CSSToolDlg::OnBnClickedBtnCut)
 	ON_CBN_SELCHANGE(IDC_COMBO_COMLIST, &CSSToolDlg::OnCbnSelchangeComboComlist)
 	ON_BN_CLICKED(IDC_BTN_TIME, &CSSToolDlg::OnBnClickedBtnTime)
 	ON_WM_CLOSE()
@@ -450,6 +448,10 @@ void CSSToolDlg::OnBnClickedButtonCon()
 		if(m_conn.OpenPort(strConnStore[m_iCurConn],m_iCurBaudrate,m_iCurParity,m_iCurDataBits,m_iCurStopBits))
 		{
 			m_connBtn.SetWindowTextW(L"关闭串口");
+			m_cbBaudrate.EnableWindow(FALSE);
+			m_cbStopBits.EnableWindow(FALSE);
+			m_cbDataBits.EnableWindow(FALSE);
+			m_cbParity.EnableWindow(FALSE);
 			UpdateItem();
 			SetTimer(2,100,NULL);
 		}
@@ -462,6 +464,10 @@ void CSSToolDlg::OnBnClickedButtonCon()
 			else
 			{
 				MessageBox(L"串口被占用!");
+				m_cbBaudrate.EnableWindow(TRUE);
+				m_cbStopBits.EnableWindow(TRUE);
+				m_cbDataBits.EnableWindow(TRUE);
+				m_cbParity.EnableWindow(TRUE);
 				m_connBtn.SetWindowTextW(L"打开串口");
 				UpdateItem();
 			}
@@ -472,6 +478,10 @@ void CSSToolDlg::OnBnClickedButtonCon()
 		if(m_conn.ClosePort())
 		{
 			m_connBtn.SetWindowTextW(L"打开串口");
+			m_cbBaudrate.EnableWindow(TRUE);
+			m_cbStopBits.EnableWindow(TRUE);
+			m_cbDataBits.EnableWindow(TRUE);
+			m_cbParity.EnableWindow(TRUE);
 			UpdateItem();
 		}
 	}
@@ -653,7 +663,7 @@ void CSSToolDlg::OnBnClickedCheckScSend()
 }
 void CSSToolDlg::ReSizeExtItems()
 {
-	CRect rcText,rcStGroup,rcCopy,rcCap,rcCut,rcSelAll,rcTime;
+	CRect rcText,rcStGroup,rcCap,rcTime;
 	if(m_bExtEnable)
 	{
 		m_ctlMsgOut.GetWindowRect(rcText);
@@ -672,40 +682,16 @@ void CSSToolDlg::ReSizeExtItems()
 		rcCap.bottom=rcCap.top+EXT_BTN_HEIGHT;
 		rcCap.right=rcCap.left+EXT_MENU_WIDTH-10;
 
-		GetDlgItem(IDC_BTN_SEL_ALL)->GetWindowRect(&rcSelAll);
-		ScreenToClient(&rcSelAll);
-		rcSelAll.top=rcCap.bottom+2;
-		rcSelAll.left=rcStGroup.left+1;
-		rcSelAll.right=rcSelAll.left+EXT_MENU_WIDTH/2;
-		rcSelAll.bottom=rcSelAll.top+EXT_BTN_HEIGHT;
-
-		GetDlgItem(IDC_BTN_COPY)->GetWindowRect(&rcCopy);
-		ScreenToClient(&rcCopy);
-		rcCopy.left=rcSelAll.right;
-		rcCopy.top=rcSelAll.top;
-		rcCopy.bottom=rcCopy.top+EXT_BTN_HEIGHT;
-		rcCopy.right=rcCopy.left+EXT_MENU_WIDTH/2-10;
-
-
-		GetDlgItem(IDC_BTN_CUT)->GetWindowRect(&rcCut);
-		ScreenToClient(&rcCut);
-		rcCut.left=rcStGroup.left+1;
-		rcCut.top=rcSelAll.bottom+1;
-		rcCut.bottom=rcCut.top+EXT_BTN_HEIGHT;
-		rcCut.right=rcCut.left+EXT_MENU_WIDTH/2;
 
 		GetDlgItem(IDC_BTN_TIME)->GetWindowRect(&rcTime);
 		ScreenToClient(&rcTime);
-		rcTime.left=rcStGroup.left+1;
-		rcTime.top=rcCut.bottom+1;
+		rcTime.left=rcCap.left+1;
+		rcTime.top=rcCap.bottom+1;
 		rcTime.bottom=rcTime.top+EXT_BTN_HEIGHT;
 		rcTime.right=rcTime.left+EXT_MENU_WIDTH-10;
 
 		GetDlgItem(IDC_STATIC_EXT_GROUP)->MoveWindow(rcStGroup);
 		GetDlgItem(IDC_BUTTON_CAP)->MoveWindow(rcCap);
-		GetDlgItem(IDC_BTN_SEL_ALL)->MoveWindow(rcSelAll);
-		GetDlgItem(IDC_BTN_COPY)->MoveWindow(rcCopy);
-		GetDlgItem(IDC_BTN_CUT)->MoveWindow(rcCut);
 		GetDlgItem(IDC_BTN_TIME)->MoveWindow(rcTime);
 
 		InvalidateRect(FALSE);
@@ -873,6 +859,10 @@ LRESULT CSSToolDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 				m_conn.ResetComStatues();	
 				RefreshComPort();
 				m_connBtn.SetWindowTextW(L"打开串口");
+				m_cbBaudrate.EnableWindow(TRUE);
+				m_cbStopBits.EnableWindow(TRUE);
+				m_cbDataBits.EnableWindow(TRUE);
+				m_cbParity.EnableWindow(TRUE);
 				UpdateItem();
 			}
 			else
@@ -909,9 +899,6 @@ void CSSToolDlg::InitExtItems()
 {
 	GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_HIDE);
-	GetDlgItem(IDC_BTN_SEL_ALL)->ShowWindow(SW_HIDE);
-	GetDlgItem(IDC_BTN_COPY)->ShowWindow(SW_HIDE);
-	GetDlgItem(IDC_BTN_CUT)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_HIDE);
 
 }
@@ -929,9 +916,6 @@ void CSSToolDlg::OnBnClickedButtonExt()
 			GetDlgItem(IDC_BUTTON_EXT)->SetWindowText(L"隐藏");
 			GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_SHOW);
 			GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_SHOW);
-			GetDlgItem(IDC_BTN_SEL_ALL)->ShowWindow(SW_SHOW);
-			GetDlgItem(IDC_BTN_COPY)->ShowWindow(SW_SHOW);
-			GetDlgItem(IDC_BTN_CUT)->ShowWindow(SW_SHOW);
 			GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_SHOW);
 			ReSizeExtItems();
 			Invalidate(FALSE);
@@ -945,9 +929,6 @@ void CSSToolDlg::OnBnClickedButtonExt()
 			GetDlgItem(IDC_BUTTON_EXT)->SetWindowText(L"扩展");
 			GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_HIDE);
 			GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_HIDE);
-			GetDlgItem(IDC_BTN_SEL_ALL)->ShowWindow(SW_HIDE);
-			GetDlgItem(IDC_BTN_COPY)->ShowWindow(SW_HIDE);
-			GetDlgItem(IDC_BTN_CUT)->ShowWindow(SW_HIDE);	
 			GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_HIDE);
 		}
 }
@@ -998,26 +979,12 @@ void CSSToolDlg::OnBnClickedButtonCap()
 	DeleteFile(strPath);
 
 }
-void CSSToolDlg::OnBnClickedBtnSelAll()
+void CSSToolDlg::OnBnClickedBtnCopy()
 {
 	m_ctlMsgOut.SetSel(0,-1);
 	m_ctlMsgOut.SetFocus();
-}
-void CSSToolDlg::OnBnClickedBtnCopy()
-{
-	if(m_ctlMsgOut.GetFocus())
 	m_ctlMsgOut.Copy();
 }
-void CSSToolDlg::OnBnClickedBtnCut()
-{
-	if(m_ctlMsgOut.GetFocus())
-	{
-		m_ctlMsgOut.Cut();
-		m_RecieveData.Empty();
-	}
-}
-
-
 void CSSToolDlg::OnCbnSelchangeComboComlist()
 {
 	m_ctrComList.SetCurSel(m_ctrComList.GetCurSel());
@@ -1034,7 +1001,7 @@ void CSSToolDlg::OnBnClickedBtnTime()
 	{
 		m_conn.ComEnableTimeShow(TRUE);
 		m_bTimeShow=TRUE;
-		GetDlgItem(IDC_BTN_TIME)->SetWindowText(L"显示时间*");
+		GetDlgItem(IDC_BTN_TIME)->SetWindowText(L"隐藏时间");
 	}
 	else
 	{

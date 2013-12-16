@@ -134,9 +134,7 @@ public:
 	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 	afx_msg void OnBnClickedButtonExt();
 	afx_msg void OnBnClickedButtonCap();
-	afx_msg void OnBnClickedBtnSelAll();
 	afx_msg void OnBnClickedBtnCopy();
-	afx_msg void OnBnClickedBtnCut();
 	afx_msg void OnCbnSelchangeComboComlist();
 	afx_msg void OnBnClickedBtnTime();
 	afx_msg void OnClose();
