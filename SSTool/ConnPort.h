@@ -29,6 +29,10 @@ protected:
 	HANDLE	m_hThreadWrite;
 	HANDLE	m_hDataParse;
 	HANDLE	m_hWrite;
+	HANDLE	m_hEventParse;
+	HANDLE	m_hRead;
+	HANDLE	m_hRetOK;
+	HANDLE	m_hThreadSignal;
 	BOOL	m_bIsConnect;
 	BOOL	m_bHexSend;
 	int		m_rCount;
@@ -43,5 +47,6 @@ protected:
 	static DWORD  ReadThreadProc(LPVOID lpParameter);
 	static DWORD  WriteThreadProc(LPVOID lpParameter);
 	static DWORD  PareDataProc(LPVOID lpParameter);
+	static DWORD  WaitSignalProc(LPVOID lpParameter);
 };
 

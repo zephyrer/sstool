@@ -7,8 +7,8 @@
 #include"resource.h"
 #include "afxcmn.h"
 
-#define MAX_LINE_SHOW		50000
-#define MAX_HEX_LINE		50000
+#define MAX_LINE_SHOW		36000
+#define MAX_HEX_LINE		36000
 #define MAX_BYTES_NUM		-1
 #define MAX_SAVE_TEXT_NUM	500
 #define EXT_MENU_WIDTH		150

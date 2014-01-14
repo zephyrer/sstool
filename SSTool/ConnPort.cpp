@@ -4,7 +4,7 @@
 #include "string.h"
 
 #define     MAX_BUFFER_SIZE   512
-#define		MAX_SEND_SIZE	  256
+#define		MAX_SEND_SIZE	  5
 volatile int			g_iExitFlag=0;
 static	 int			g_wExitFlag=0;
 static	 int			g_rExitFlag=0;
@@ -169,7 +169,7 @@ int ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int
    //指定端口检测的事件集
    SetCommMask(m_hPort,EV_RXCHAR);
    //设置缓冲区，内部输入、输出缓冲区大小
-   SetupComm(m_hPort,512,512);
+   SetupComm(m_hPort,1024,1024);
    //刷新缓冲区信息->输入、输出缓冲区
    PurgeComm(m_hPort,PURGE_TXCLEAR|PURGE_RXCLEAR);
 
@@ -192,7 +192,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
     DWORD		dwErrFlag;
     DWORD		dwLength;
 	DWORD		dwRead;
-
+	DWORD		dwModemStat;
     ConnPort	*pThis=(ConnPort *)p;
 	BYTE    RXBuffer;
   
@@ -204,19 +204,19 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 	memset(&comStat,0,sizeof(COMSTAT));
     while(1)
     {
-		Sleep(1);
-		if(1==g_iExitFlag||!pThis->m_bIsConnect)
+		if(1==g_iExitFlag)
 		{
 			break;
 		}
-		if(1)
+		WaitCommEvent(pThis->m_hPort,&dwModemStat,0);
+		if(dwModemStat&EV_RXCHAR)
 		{
+				Sleep(1);
 				ClearCommError(pThis->m_hPort,&dwErrFlag,&comStat);
 				dwLength=comStat.cbInQue;
 				EnterCriticalSection(&pThis->m_csRead);
 				while(dwLength>0)
 				{
-					//读数据
 					if(g_iRInPos==g_iROutPos) Sleep(20);
 					BOOL bRet=ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,NULL);
 					if(!bRet||0==dwLength) 
@@ -246,7 +246,10 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 	{
 		Sleep(0);
 		if(1==g_iExitFlag||!pThis->m_bIsConnect) break;
-		if(g_iROutPos==g_iRInPos) Sleep(10);
+		if(g_iROutPos==g_iRInPos) 
+		{
+			Sleep(10);
+		}
 		sprintf(&szTmp,"%c",g_ReadDataBuf[g_iROutPos]);
 		if(szTmp=='\n')
 		{
@@ -262,7 +265,8 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 			szRev[iReadCount++]=szTmp;
 			g_ReadDataBuf[g_iROutPos]=0;
 			g_iROutPos=((g_iROutPos++)%MAX_BUFFER_SIZE);
-		}	
+		}
+		
 	}
 	g_pExitFlag=1;
 	return TRUE;
@@ -297,20 +301,19 @@ BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
 			g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szWriteData[iLoop];
 		}
 		m_wCount++;
+		SetEvent(m_hWrite);
 	}
-	SetEvent(m_hWrite);
 	return  TRUE;
 }
 DWORD ConnPort::WriteThreadProc( LPVOID p )
 {
-
     DWORD dwWritten;
     ConnPort *pThis=(ConnPort *)p;
 	memset(g_WriteDataBuf,0,MAX_BUFFER_SIZE);
     while(TRUE)
     {
-		WaitForSingleObject(pThis->m_hWrite,INFINITE);
-		if(1==g_iExitFlag||!pThis->m_bIsConnect)
+		//WaitForSingleObject(pThis->m_hWrite,INFINITE);
+		if(1==g_iExitFlag)
 		{
 			break;
 		}
@@ -319,7 +322,7 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 			ResetEvent(pThis->m_hWrite);
 			continue;
 		}
-		EnterCriticalSection(&pThis->m_csWrite);
+		//EnterCriticalSection(&pThis->m_csWrite);
 		if(INVALID_HANDLE_VALUE!=pThis->m_hPort)
 		{
          SetCommMask(pThis->m_hPort,EV_RXCHAR);
@@ -327,10 +330,11 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 		 pThis->m_WrriteBuffer=g_WriteDataBuf[(g_iWOutPos++)%MAX_BUFFER_SIZE];
          WriteFile(pThis->m_hPort,&(pThis->m_WrriteBuffer),1,&dwWritten,NULL);
 		}
-		LeaveCriticalSection(&pThis->m_csWrite);
+		//LeaveCriticalSection(&pThis->m_csWrite);
+		ResetEvent(pThis->m_hWrite);
     }
 	g_wExitFlag=1;
-	return 0;
+	return 1;
 }
 Uint ConnPort::Hex2wChar(TCHAR *Buffer,TCHAR *szOut,int *iLen)
 {
