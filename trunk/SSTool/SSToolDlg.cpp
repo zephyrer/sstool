@@ -388,7 +388,7 @@ void CSSToolDlg::EnterWorkPath()
 void  CSSToolDlg::OutMsg(CString strMsg)
 {
 	int iLen=0;
-	char *szbuf=NULL;
+	char szbuf[MAX_PATH];
 	CString strPath;
 	if(m_ctlMsgOut.GetLineCount()>((m_conn.GetHexShowEnable()==TRUE)?MAX_HEX_LINE:MAX_LINE_SHOW))
 	{
@@ -416,8 +416,6 @@ void  CSSToolDlg::OutMsg(CString strMsg)
 				return;
 			}
 		}
-
-
 		m_CCacheFile.SeekToEnd();
 		m_CCacheFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
 
@@ -509,7 +507,10 @@ void CSSToolDlg::OnBnClickedButtonSend()
 	strWrite.Empty();
 	m_mSend.GetWindowTextW(strWrite);
 	szSend=strWrite.GetBuffer(strWrite.GetLength());
-	m_conn.WriteString(L"\n",1);
+	if(strWrite.IsEmpty())
+	{
+		m_conn.WriteString(L"\n",1);
+	}
 	m_conn.WriteString(szSend,strWrite.GetLength());
 	if(TRUE==m_bSendBR)
 		m_conn.WriteString(L"\n",1);
