@@ -4,7 +4,7 @@
 #include "string.h"
 
 #define     MAX_BUFFER_SIZE   512
-#define		MAX_SEND_SIZE	  5
+#define		MAX_SEND_SIZE	  256
 volatile int			g_iExitFlag=0;
 static	 int			g_wExitFlag=0;
 static	 int			g_rExitFlag=0;
@@ -89,10 +89,10 @@ BOOL ConnPort::CommTimeouts()
     
     GetCommTimeouts(m_hPort,&commTimeOut);
     
-    commTimeOut.ReadIntervalTimeout=MAXWORD;
+    commTimeOut.ReadIntervalTimeout=1000;
     commTimeOut.ReadTotalTimeoutConstant=0;
     commTimeOut.ReadTotalTimeoutMultiplier=0;
-    commTimeOut.WriteTotalTimeoutConstant=2000;
+    commTimeOut.WriteTotalTimeoutConstant=500;
     commTimeOut.WriteTotalTimeoutMultiplier=50;
 
     if(!SetCommTimeouts(m_hPort,&commTimeOut)) 
@@ -123,8 +123,7 @@ BOOL ConnPort::ClosePort()
 	}
     EscapeCommFunction(m_hPort,CLRRTS);
     EscapeCommFunction(m_hPort,CLRDTR);
-    DeleteCriticalSection(&m_csRead);
-    DeleteCriticalSection(&m_csWrite);
+
     SetCommMask(m_hPort,0);
 	
 	if(NULL==m_hPort)return FALSE;
@@ -132,8 +131,6 @@ BOOL ConnPort::ClosePort()
 	if(NULL==m_hThreadWrite)return FALSE;
 	if(NULL==m_hDataParse)return FALSE;
 	
-
-	if(!CloseHandle(m_hWrite))return FALSE;
     if(!CloseHandle(m_hPort))return FALSE;
     if(!CloseHandle(m_hThreadRead))return FALSE;
     if(!CloseHandle(m_hThreadWrite))return FALSE;
@@ -157,7 +154,7 @@ int ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int
 						0,
 						NULL,
 						OPEN_EXISTING,
-						0/*FILE_FLAG_OVERLAPPED*/,
+						FILE_FLAG_OVERLAPPED,
 						NULL);
     if(!m_hPort) 
     {
@@ -175,14 +172,12 @@ int ConnPort::OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int
 
    if(!ConfigPort(iBaudrate,iParity,iDataBits,iStopBits)) return FALSE;
    if(!CommTimeouts())return FALSE;
-   InitializeCriticalSection(&m_csRead);
-   InitializeCriticalSection(&m_csWrite);
+
   //创建读写线程
    m_hThreadRead	=	CreateThread(0,0,(LPTHREAD_START_ROUTINE)ReadThreadProc,	(void*)this,0,&dwThreadID);
    m_hThreadWrite	=	CreateThread(0,0,(LPTHREAD_START_ROUTINE)WriteThreadProc,	(void*)this,0,&dwThreadID);
    m_hDataParse		=   CreateThread(0,0,(LPTHREAD_START_ROUTINE)PareDataProc,		(void*)this,0,&dwThreadID);
-   m_hWrite			=   CreateEvent(NULL,TRUE,FALSE,L"hWrite");
-   ResetEvent(m_hWrite);
+
    m_bIsConnect=TRUE;
    return TRUE;
 }
@@ -192,43 +187,65 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
     DWORD		dwErrFlag;
     DWORD		dwLength;
 	DWORD		dwRead;
-	DWORD		dwModemStat;
+	DWORD		dwCommStatus;
     ConnPort	*pThis=(ConnPort *)p;
-	BYTE    RXBuffer;
-  
+	BYTE		RXBuffer;
+    OVERLAPPED  osRead;
     if(INVALID_HANDLE_VALUE==pThis->m_hPort)
     {
         AfxMessageBox(L"打开串口失败!");
     }
 	memset(g_ReadDataBuf,0,MAX_BUFFER_SIZE);
 	memset(&comStat,0,sizeof(COMSTAT));
+	 
+	memset(&osRead,0,sizeof(osRead)); 
+	osRead.hEvent = CreateEvent(NULL,TRUE,FALSE,NULL);     
+
     while(1)
     {
 		if(1==g_iExitFlag)
 		{
 			break;
 		}
-		WaitCommEvent(pThis->m_hPort,&dwModemStat,0);
-		if(dwModemStat&EV_RXCHAR)
+		if(GetOverlappedResult(pThis->m_hPort,&osRead,&dwRead,TRUE) == FALSE)
 		{
-				Sleep(1);
+		DWORD dwErrors;
+		if(GetLastError() != ERROR_IO_PENDING)
+        {
+             //...
+        }
+        memset(&comStat,0,sizeof(comStat));
+        ClearCommError(pThis->m_hPort,&dwErrors,&comStat);
+		}
+		Sleep(2);
+		WaitCommEvent(pThis->m_hPort,&dwCommStatus,&osRead);
+		if(dwCommStatus&EV_RXCHAR)
+		{
 				ClearCommError(pThis->m_hPort,&dwErrFlag,&comStat);
 				dwLength=comStat.cbInQue;
-				EnterCriticalSection(&pThis->m_csRead);
 				while(dwLength>0)
 				{
 					if(g_iRInPos==g_iROutPos) Sleep(20);
-					BOOL bRet=ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,NULL);
-					if(!bRet||0==dwLength) 
+					if(ReadFile(pThis->m_hPort,&RXBuffer,1,&dwRead,&osRead)==FALSE)
 					{
-						continue;
+						if(GetLastError() != ERROR_IO_PENDING)
+						{
+							//...
+						}
+						if(GetOverlappedResult(pThis->m_hPort,&osRead,&dwRead,TRUE) == FALSE)
+						{
+							//...
+						}
+						if(dwRead == 0)
+						{
+							continue;
+						}
 					}
 					g_ReadDataBuf[g_iRInPos]=RXBuffer;
 					g_iRInPos=((g_iRInPos++)%MAX_BUFFER_SIZE);
 					pThis->m_rCount++;
 					dwLength--;
 				}
-				LeaveCriticalSection(&pThis->m_csRead);
 		}
 	}
 	g_rExitFlag=1;
@@ -265,15 +282,14 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 			szRev[iReadCount++]=szTmp;
 			g_ReadDataBuf[g_iROutPos]=0;
 			g_iROutPos=((g_iROutPos++)%MAX_BUFFER_SIZE);
-		}
-		
+		}	
 	}
 	g_pExitFlag=1;
 	return TRUE;
 }
-BOOL ConnPort::WriteByte(BYTE byWrite)
+BOOL ConnPort::WriteByte(TCHAR szChar)
 {
-	g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=byWrite;
+	g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szChar;
 	return  TRUE;
 }
 BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
@@ -301,37 +317,50 @@ BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
 			g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szWriteData[iLoop];
 		}
 		m_wCount++;
-		SetEvent(m_hWrite);
 	}
 	return  TRUE;
 }
 DWORD ConnPort::WriteThreadProc( LPVOID p )
 {
     DWORD dwWritten;
+	OVERLAPPED osWrite;
+	DWORD dwBytes; 
     ConnPort *pThis=(ConnPort *)p;
 	memset(g_WriteDataBuf,0,MAX_BUFFER_SIZE);
+
+	memset(&osWrite,0,sizeof(osWrite));
+	osWrite.hEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
+
     while(TRUE)
     {
-		//WaitForSingleObject(pThis->m_hWrite,INFINITE);
+		Sleep(2);
 		if(1==g_iExitFlag)
 		{
 			break;
 		}
 		if(g_iWInPos==g_iWOutPos) 
 		{
-			ResetEvent(pThis->m_hWrite);
 			continue;
 		}
-		//EnterCriticalSection(&pThis->m_csWrite);
 		if(INVALID_HANDLE_VALUE!=pThis->m_hPort)
 		{
-         SetCommMask(pThis->m_hPort,EV_RXCHAR);
-         PurgeComm(pThis->m_hPort,PURGE_TXCLEAR|PURGE_RXCLEAR);
-		 pThis->m_WrriteBuffer=g_WriteDataBuf[(g_iWOutPos++)%MAX_BUFFER_SIZE];
-         WriteFile(pThis->m_hPort,&(pThis->m_WrriteBuffer),1,&dwWritten,NULL);
+			pThis->m_WrriteBuffer=g_WriteDataBuf[(g_iWOutPos++)%MAX_BUFFER_SIZE];
+			if(WriteFile(pThis->m_hPort,&(pThis->m_WrriteBuffer),1,&dwWritten,&osWrite)==FALSE)
+			{
+				if(GetLastError() != ERROR_IO_PENDING)
+				{
+
+				}
+				else
+				{
+					Sleep(2);
+				}
+			}
+			if(GetOverlappedResult(pThis->m_hPort,&osWrite,&dwBytes,TRUE)== FALSE)
+			{
+				///.....
+			}
 		}
-		//LeaveCriticalSection(&pThis->m_csWrite);
-		ResetEvent(pThis->m_hWrite);
     }
 	g_wExitFlag=1;
 	return 1;
@@ -463,8 +492,6 @@ void ConnPort::ResetComStatues()
 
 	EscapeCommFunction(m_hPort,CLRRTS);
     EscapeCommFunction(m_hPort,CLRDTR);
-    DeleteCriticalSection(&m_csRead);
-    DeleteCriticalSection(&m_csWrite);
     SetCommMask(m_hPort,0);
 	
     CloseHandle(m_hPort);

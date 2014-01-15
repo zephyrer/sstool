@@ -8,7 +8,7 @@ public:
 	~ConnPort(void);
 	BOOL ClosePort();
 	int  OpenPort(TCHAR *szPort,int iBaudrate,int iParity,int iDataBits,int iStopBits);
-	BOOL WriteByte(BYTE byWrite);
+	BOOL WriteByte(TCHAR szChar);
 	BOOL WriteString(TCHAR *szWriteData,int iLen);
 	void SetHexShow(BOOL bHex);
 	void SetHexSend(BOOL bHex);
@@ -28,7 +28,7 @@ protected:
 	HANDLE	m_hThreadRead;
 	HANDLE	m_hThreadWrite;
 	HANDLE	m_hDataParse;
-	HANDLE	m_hWrite;
+
 	HANDLE	m_hEventParse;
 	HANDLE	m_hRead;
 	HANDLE	m_hRetOK;
@@ -37,8 +37,7 @@ protected:
 	BOOL	m_bHexSend;
 	int		m_rCount;
 	int     m_wCount;
-	CRITICAL_SECTION m_csRead;
-	CRITICAL_SECTION m_csWrite;
+
 	Uint   Char2Hex(char *Buffer,char *szOut,int iLen);
 	Uint   Hex2wChar(TCHAR *Buffer,TCHAR *szOut,int *iLen);
 	BOOL   ConfigPort(int iBaudrate,int iParity,int iDataBits,int iStopBits);
