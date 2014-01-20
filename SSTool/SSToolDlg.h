@@ -14,6 +14,7 @@
 #define EXT_MENU_WIDTH		150
 #define EXT_BTN_HEIGHT		22
 #define CACHE_FILE_NAME		L"\\sstool_cache.txt"
+#define MAX_CMD_BUFFER_SIZE	20
 
 typedef enum
 {
