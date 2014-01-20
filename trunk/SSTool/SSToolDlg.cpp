@@ -18,6 +18,10 @@
 #define new DEBUG_NEW
 #endif
 
+static int	  g_iInPos=0;
+static int	  g_iPos=0;
+TCHAR strCmdBuf[MAX_CMD_BUFFER_SIZE][128]={0};
+
 TCHAR *strConn[]=
 {
 	L"COM1",
@@ -166,9 +170,6 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CHECK_BR, &CSSToolDlg::OnBnClickedCheckBr)
 	ON_EN_CHANGE(IDC_EDIT_STIME, &CSSToolDlg::OnEnChangeEditStime)
 END_MESSAGE_MAP()
-
-
-// CSSToolDlg message handlers
 
 void CSSToolDlg::InitCommList()
 {
@@ -521,6 +522,9 @@ void CSSToolDlg::OnBnClickedButtonSend()
 	}
 	if(!m_TimeSend)
 	m_mSend.SetWindowTextW(L"");
+	memset(strCmdBuf+(g_iInPos),0,128);
+	memcpy(strCmdBuf+(g_iInPos++),szSend,strWrite.GetLength()*sizeof(TCHAR));
+	g_iPos=0;
 }
 
 BOOL CSSToolDlg::Char2Hex(TCHAR *szBuffer,TCHAR *szOut,int iLen)
@@ -755,6 +759,8 @@ void CSSToolDlg::OnSize(UINT nType, int cx, int cy)
 }
 BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 {
+	
+	CString strCmd;
 	if (pMsg->message==WM_KEYDOWN)
 	{
 		if (pMsg->wParam==VK_RETURN)
@@ -773,6 +779,20 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 		else if((pMsg->wParam==VK_SPACE) && (this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd))
 		{
 			m_conn.WriteByte(0x20);
+		}
+		else if(pMsg->wParam==VK_UP)
+		{
+			strCmd=strCmdBuf[g_iInPos-g_iPos-1];
+			if(g_iPos<g_iInPos-1)
+			g_iPos++;
+			m_mSend.SetWindowTextW(strCmd);
+		}
+		else if(pMsg->wParam==VK_DOWN)
+		{
+			strCmd=strCmdBuf[g_iInPos-g_iPos-1];
+			if(g_iPos>0)
+			g_iPos--;
+			m_mSend.SetWindowTextW(strCmd);
 		}
 		else if(pMsg->wParam == 'Z' && GetKeyState(VK_CONTROL)&& GetKeyState(VK_SHIFT))
 		{
@@ -861,8 +881,7 @@ LRESULT CSSToolDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		{  
 			 OutMsg(L"正在检测串口，请稍后....\n");
 			 RefreshComPort();
-			 OutMsg(L"OK!!\n");
-			 
+			 OutMsg(L"OK!!\n");	 
 		}  
 		break;  
 		case   DBT_DEVICEREMOVECOMPLETE:  
@@ -897,7 +916,6 @@ LRESULT CSSToolDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 	return CDialogEx::WindowProc(message, wParam, lParam);
 }
-
 
 char CSSToolDlg::FirstDriveFromMask (ULONG unitmask)
 {
