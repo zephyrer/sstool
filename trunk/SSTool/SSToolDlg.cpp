@@ -143,6 +143,7 @@ void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHECK_SC_SEND, m_scSnd);
 	DDX_Control(pDX, IDC_BUTTON_SEND, m_SendBtn);
 	DDX_Control(pDX, IDC_STATE_ON, m_StateTip);
+	DDX_Control(pDX, IDC_EDIT_TIME, m_msgTime);
 }
 
 BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
@@ -255,6 +256,7 @@ BOOL CSSToolDlg::OnInitDialog()
 
 	m_showFont.CreateFont(14,7,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Courier New");
 	m_ctlMsgOut.SetFont(&m_showFont,FALSE);
+	m_msgTime.SetFont(&m_showFont,FALSE);
 
 	m_sndTimer.SetWindowTextW(L"1000");
 	InitExtItems();
@@ -386,6 +388,22 @@ void CSSToolDlg::EnterWorkPath()
 	CreateDirectory(strPath,NULL);
 	SetCurrentDirectory(strPath);
 }
+
+void CSSToolDlg::ShowTime(CString strMsg)
+{
+	int iLen=0;
+	//CString strTime;
+
+
+	//strTime.Empty();
+	//m_msgTime.SetSel(0,-1);
+	//m_msgTime.ReplaceSel(L" ");
+
+	iLen=m_msgTime.GetWindowTextLengthW();
+	m_msgTime.SetSel(iLen,iLen);
+	m_msgTime.ReplaceSel((LPCTSTR)strMsg);
+
+}
 void  CSSToolDlg::OutMsg(CString strMsg)
 {
 	int iLen=0;
@@ -491,6 +509,8 @@ void CSSToolDlg::OnBnClickedButtonClear()
 	strPath.Empty();
 	m_strCache.Empty();
 	m_RecieveData.Empty();
+	m_msgTime.SetSel(0,-1);
+	m_msgTime.ReplaceSel(L" ");
 	m_ctlMsgOut.SetSel(0,-1);
 	m_ctlMsgOut.ReplaceSel(L" ");
 	m_conn.EmptyBytesCount();
@@ -936,6 +956,8 @@ void CSSToolDlg::InitExtItems()
 	GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_HIDE);
 
+	GetDlgItem(IDC_EDIT_TIME)->ShowWindow(SW_HIDE);
+
 }
 void CSSToolDlg::OnBnClickedButtonExt()
 {
@@ -1029,6 +1051,38 @@ void CSSToolDlg::OnCbnSelchangeComboComlist()
 		OnBnClickedButtonCon();
 	}	
 }
+void CSSToolDlg::ShowTimeBar(BOOL bShow)
+{
+		CRect rcTime,rcText;
+		m_ctlMsgOut.GetWindowRect(rcText);
+		ScreenToClient(&rcText);
+
+		m_msgTime.GetWindowRect(&rcTime);
+		ScreenToClient(&rcTime);
+
+		if(bShow)
+		{
+			rcTime.top=rcText.top;
+			rcTime.left=rcText.left;
+			rcTime.right=rcTime.left+TIME_BAR_WIDTH;
+			rcTime.bottom=rcText.bottom;
+
+			rcText.left=rcTime.right;
+			m_msgTime.MoveWindow(rcTime);
+			m_msgTime.ShowWindow(SW_SHOW);
+		}
+		else
+		{
+			rcText.left=rcTime.left;
+			m_msgTime.ShowWindow(SW_HIDE);
+		}
+		m_ctlMsgOut.MoveWindow(rcText);
+
+		InvalidateRect(FALSE);
+		UpdateWindow();
+
+		
+}
 void CSSToolDlg::OnBnClickedBtnTime()
 {
 	if(!m_conn.IsConnect()) return;
@@ -1037,12 +1091,14 @@ void CSSToolDlg::OnBnClickedBtnTime()
 		m_conn.ComEnableTimeShow(TRUE);
 		m_bTimeShow=TRUE;
 		GetDlgItem(IDC_BTN_TIME)->SetWindowText(L"隐藏时间");
+		ShowTimeBar(TRUE);
 	}
 	else
 	{
 		m_conn.ComEnableTimeShow(FALSE);
 		m_bTimeShow=FALSE;
 		GetDlgItem(IDC_BTN_TIME)->SetWindowText(L"显示时间");
+		ShowTimeBar(FALSE);
 	}
 }
 void CSSToolDlg::OnClose()

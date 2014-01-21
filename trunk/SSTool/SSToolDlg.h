@@ -15,6 +15,7 @@
 #define EXT_BTN_HEIGHT		22
 #define CACHE_FILE_NAME		L"\\sstool_cache.txt"
 #define MAX_CMD_BUFFER_SIZE	20
+#define TIME_BAR_WIDTH		120
 
 typedef enum
 {
@@ -78,6 +79,7 @@ protected:
 	int   m_iComCounts;
 	CString	m_strCaption;
 	CString m_RecieveData;
+	CString m_strTimeSotre;
 	CString m_strCache;
 	CFont	m_showFont;
 	BOOL	m_bExtEnable;
@@ -87,6 +89,7 @@ protected:
 	UINT_PTR m_TimeHandle;
 	void InitCommList();
 	void InitExtItems();
+	void ShowTimeBar(BOOL bShow);
 	void ReSizeMainWindow();
 	void EnterWorkPath();
 	void UpdateItem();
@@ -104,6 +107,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
+	void  ShowTime(CString strMsg);
 	void  OutMsg(CString strMsg);
 	afx_msg void OnBnClickedButtonClear();
 	afx_msg void OnBnClickedButtonSend();
@@ -141,4 +145,5 @@ public:
 	afx_msg void OnClose();
 	afx_msg void OnBnClickedCheckBr();
 	afx_msg void OnEnChangeEditStime();
+	CEdit m_msgTime;
 };
