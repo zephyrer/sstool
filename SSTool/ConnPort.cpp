@@ -42,6 +42,7 @@ ConnPort::ConnPort(void)
 	m_wCount	=0;
 	m_rCount	=0;
 	m_bTimeShow =FALSE;
+	m_bShowLineNumber=FALSE;
 }
 
 ConnPort::~ConnPort(void)
@@ -263,35 +264,43 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 	{
 		Sleep(0);
 		if(1==g_iExitFlag||!pThis->m_bIsConnect) break;
-		if(g_iROutPos==g_iRInPos) 
-		{
-			Sleep(10);
-		}
+
 		sprintf(&szTmp,"%c",g_ReadDataBuf[g_iROutPos]);
 		if(szTmp=='\n')
 		{
 			szRev[iReadCount++]='\n';
-			pThis->SendComData(szRev,iReadCount);
+			pThis->SendComData(szRev,iReadCount,TRUE);
 			iReadCount=0;
 			g_ReadDataBuf[g_iROutPos]=0;
 			g_iROutPos=((g_iROutPos++)%MAX_BUFFER_SIZE);
 			memset(szRev,0,MAX_BUFFER_SIZE);
+		}
+		else if(iReadCount>0 && g_iROutPos== g_iRInPos)
+		{
+			pThis->SendComData(szRev,iReadCount,FALSE);
+			iReadCount=0;
 		}
 		else if(szTmp!=0)
 		{
 			szRev[iReadCount++]=szTmp;
 			g_ReadDataBuf[g_iROutPos]=0;
 			g_iROutPos=((g_iROutPos++)%MAX_BUFFER_SIZE);
-		}	
+		}
+		else
+		{
+			Sleep(2);
+		}
 	}
 	g_pExitFlag=1;
 	return TRUE;
 }
+
 BOOL ConnPort::WriteByte(TCHAR szChar)
 {
 	g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szChar;
 	return  TRUE;
 }
+
 BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
 {
 	TCHAR szCharHex[MAX_SEND_SIZE]={0};
@@ -320,6 +329,7 @@ BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
 	}
 	return  TRUE;
 }
+
 DWORD ConnPort::WriteThreadProc( LPVOID p )
 {
     DWORD dwWritten;
@@ -427,18 +437,19 @@ BOOL ConnPort::GetHexShowEnable()
 {
 	return m_bHexShow;
 }
-void ConnPort::SendComData(char *szRevData,int iLen)
+void ConnPort::SendComData(char *szRevData,int iLen,BOOL bNewLine)
 {
-		CString     strMsg;
-		CTime		tt;
-		CString		strTime;
-		CString		strTmp;
-		TCHAR		m_revData[MAX_BUFFER_SIZE];
-		char		szTrans[MAX_BUFFER_SIZE];
-
+		CString			strMsg;
+		CTime			tt;
+		CString			strTime;
+		CString			strTmp;
+		TCHAR			m_revData[MAX_BUFFER_SIZE];
+		char			szTrans[MAX_BUFFER_SIZE];
+		static	BOOL	bIsNewLine=FALSE;
         CSSToolDlg		*dlg=(CSSToolDlg *)AfxGetApp()->GetMainWnd();
         memset(m_revData,0,MAX_BUFFER_SIZE);
 		memset(szTrans,	 0,MAX_BUFFER_SIZE);
+
 		if(m_bHexShow)
 		{
 			Char2Hex(szRevData,szTrans,iLen);
@@ -449,14 +460,26 @@ void ConnPort::SendComData(char *szRevData,int iLen)
 			MultiByteToWideChar(CP_ACP,0,szRevData,-1,m_revData,MAX_BUFFER_SIZE);
 		}
 		strTmp=m_revData;
+		m_dwLineNumber++;
         if(!strTmp.IsEmpty())
         {
 			
 			tt=CTime::GetCurrentTime();
-			strTime=tt.Format(L"[%m/%d %H:%M:%S] ");
-			strMsg=(m_bTimeShow)?(strTime+strTmp):strTmp;
-            dlg->OutMsg(strMsg);
+			strTime=tt.Format(L"[%m/%d %H:%M:%S]");
+			strTime+=L"\n";
+			strMsg=strTmp;
+			if(m_bTimeShow)
+				dlg->ShowTime(strTime);
         }
+		if(m_bShowLineNumber && bNewLine)
+		{
+			CString strLineNum;
+			strLineNum.Format(L"%05d:",m_dwLineNumber);
+			strMsg=strLineNum+strMsg;		
+		}
+		if(bNewLine) bIsNewLine=TRUE;
+		else bIsNewLine=FALSE;
+        dlg->OutMsg(strMsg);
 }
 void ConnPort::SetHexSend(BOOL bHex)
 {
@@ -479,6 +502,7 @@ void ConnPort::EmptyBytesCount()
 {
 	m_rCount=0;
 	m_wCount=0;
+	m_dwLineNumber=0;
 }
 void ConnPort::ResetComStatues()
 {
@@ -505,4 +529,9 @@ void ConnPort::ResetComStatues()
 void ConnPort::ComEnableTimeShow(BOOL bEnable)
 {
 	m_bTimeShow=bEnable;
+}
+
+void ConnPort::ShowLineNumber(BOOL bShow)
+{
+	m_bShowLineNumber=bShow;
 }

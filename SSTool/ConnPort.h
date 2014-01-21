@@ -12,6 +12,7 @@ public:
 	BOOL WriteString(TCHAR *szWriteData,int iLen);
 	void SetHexShow(BOOL bHex);
 	void SetHexSend(BOOL bHex);
+	void ShowLineNumber(BOOL bShow);
 	BOOL GetHexShowEnable();
 	BOOL GetHexSendEnable();
 	BOOL IsConnect();
@@ -35,14 +36,16 @@ protected:
 	HANDLE	m_hThreadSignal;
 	BOOL	m_bIsConnect;
 	BOOL	m_bHexSend;
+	BOOL	m_bShowLineNumber;
 	int		m_rCount;
 	int     m_wCount;
+	DWORD	m_dwLineNumber;
 
 	Uint   Char2Hex(char *Buffer,char *szOut,int iLen);
 	Uint   Hex2wChar(TCHAR *Buffer,TCHAR *szOut,int *iLen);
 	BOOL   ConfigPort(int iBaudrate,int iParity,int iDataBits,int iStopBits);
 	BOOL   CommTimeouts();
-	void   SendComData(char *szRevData,int iLen);
+	void   SendComData(char *szRevData,int iLen,BOOL bNewLine);
 	static DWORD  ReadThreadProc(LPVOID lpParameter);
 	static DWORD  WriteThreadProc(LPVOID lpParameter);
 	static DWORD  PareDataProc(LPVOID lpParameter);
