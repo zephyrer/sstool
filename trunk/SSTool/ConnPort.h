@@ -36,10 +36,9 @@ protected:
 	HANDLE	m_hThreadSignal;
 	BOOL	m_bIsConnect;
 	BOOL	m_bHexSend;
-	BOOL	m_bShowLineNumber;
+
 	int		m_rCount;
 	int     m_wCount;
-	DWORD	m_dwLineNumber;
 
 	Uint   Char2Hex(char *Buffer,char *szOut,int iLen);
 	Uint   Hex2wChar(TCHAR *Buffer,TCHAR *szOut,int *iLen);
