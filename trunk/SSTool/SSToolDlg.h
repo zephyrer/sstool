@@ -6,6 +6,7 @@
 #include "afxwin.h"
 #include"resource.h"
 #include "afxcmn.h"
+#include "SSToolEdit.h"
 
 #define MAX_LINE_SHOW		36000
 #define MAX_HEX_LINE		36000
@@ -116,7 +117,7 @@ public:
 	CComboBox	m_cbStopBits;
 	CComboBox	m_cbDataBits;
 	CComboBox	m_cbParity;
-	CEdit		m_ctlMsgOut;
+	CSSToolEdit	m_ctlMsgOut;
 	CEdit		m_mSend;
 	CButton		m_connBtn;
 	CEdit		m_sndTimer;
@@ -144,4 +145,5 @@ public:
 	afx_msg void OnClose();
 	afx_msg void OnBnClickedCheckBr();
 	afx_msg void OnEnChangeEditStime();
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };

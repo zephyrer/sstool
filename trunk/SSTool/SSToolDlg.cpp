@@ -169,6 +169,7 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_WM_CLOSE()
 	ON_BN_CLICKED(IDC_CHECK_BR, &CSSToolDlg::OnBnClickedCheckBr)
 	ON_EN_CHANGE(IDC_EDIT_STIME, &CSSToolDlg::OnEnChangeEditStime)
+	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 void CSSToolDlg::InitCommList()
@@ -253,7 +254,7 @@ BOOL CSSToolDlg::OnInitDialog()
 	InitCommList();
 	m_ctlMsgOut.SetLimitText(MAX_BYTES_NUM);
 
-	m_showFont.CreateFont(14,7,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Courier New");
+	m_showFont.CreateFont(16,9,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Courier New");
 	m_ctlMsgOut.SetFont(&m_showFont,FALSE);
 
 	m_sndTimer.SetWindowTextW(L"1000");
@@ -1083,4 +1084,10 @@ void CSSToolDlg::OnEnChangeEditStime()
 	if(m_TimeHandle)
 	KillTimer(m_TimeHandle);
 	OnBnClickedCheckScSend();
+}
+
+HBRUSH CSSToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor); 
+	return hbr;
 }
