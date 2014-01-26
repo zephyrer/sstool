@@ -58,6 +58,9 @@
     <ClInclude Include="ConnPort.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SSToolEdit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SSTool.cpp">
@@ -70,6 +73,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ConnPort.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SSToolEdit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
