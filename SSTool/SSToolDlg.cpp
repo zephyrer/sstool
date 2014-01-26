@@ -766,10 +766,10 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 	{
 		if (pMsg->wParam==VK_RETURN)
 		{
-			if(this->GetFocus()->m_hWnd==m_mSend.m_hWnd || this->GetFocus()->m_hWnd==m_mSend.m_hWnd)
+			if(this->GetFocus()->m_hWnd==m_mSend.m_hWnd)
 			{
 				OnBnClickedButtonSend();
-				return 0;
+				return 1;
 			}
 			else if(this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)
 			{
@@ -799,10 +799,18 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 		{
 			OnBnClickedButtonCap();
 		}
-		
-		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd))
+		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>65 && pMsg->wParam<90))
 		{
 			m_conn.WriteByte(pMsg->wParam+32);
+			return 1;
+		}
+		else if(this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)
+		{
+			if(pMsg->wParam==190)
+			m_conn.WriteByte(0x2E);
+			else
+			m_conn.WriteByte(pMsg->wParam);
+			return 1;
 		}
 	}
 

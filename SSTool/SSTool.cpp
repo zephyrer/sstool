@@ -45,7 +45,7 @@ BOOL CSSToolApp::InitInstance()
 
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
-	CSSToolDlg dlg(L"SSTool");
+	CSSToolDlg dlg(L"SSTool:zjl@hikeen.com.cn");
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
