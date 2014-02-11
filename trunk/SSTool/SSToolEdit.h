@@ -1,7 +1,8 @@
 #pragma once
 
-
-// CSSToolEdit
+#define BLACK_BACK_WHITE_FONT	1
+#define BLACK_BACK_GREEN_FONT	2
+#define WHITE_BACK_BLACK_FONT	3
 
 class CSSToolEdit : public CEdit
 {
@@ -10,6 +11,7 @@ class CSSToolEdit : public CEdit
 public:
 	CSSToolEdit();
 	virtual ~CSSToolEdit();
+	void SetColorMode(int nMode);
 
 protected:
 	CBrush   m_bkBrush;

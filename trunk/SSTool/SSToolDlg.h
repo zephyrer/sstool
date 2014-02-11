@@ -89,7 +89,7 @@ protected:
 	BOOL	m_bTimeShow;
 	UINT_PTR m_TimeHandle;
 	void InitCommList();
-	void InitExtItems();
+	void ShowExtItems(BOOL bShow);
 
 	void ReSizeMainWindow();
 	void EnterWorkPath();
@@ -146,4 +146,7 @@ public:
 	afx_msg void OnBnClickedCheckBr();
 	afx_msg void OnEnChangeEditStime();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg void OnBnClickedRadioBw();
+	afx_msg void OnBnClickedRadioBg();
+	afx_msg void OnBnClickedRadioWb();
 };
