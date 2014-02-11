@@ -170,6 +170,9 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CHECK_BR, &CSSToolDlg::OnBnClickedCheckBr)
 	ON_EN_CHANGE(IDC_EDIT_STIME, &CSSToolDlg::OnEnChangeEditStime)
 	ON_WM_CTLCOLOR()
+	ON_BN_CLICKED(IDC_RADIO_BW, &CSSToolDlg::OnBnClickedRadioBw)
+	ON_BN_CLICKED(IDC_RADIO_BG, &CSSToolDlg::OnBnClickedRadioBg)
+	ON_BN_CLICKED(IDC_RADIO_WB, &CSSToolDlg::OnBnClickedRadioWb)
 END_MESSAGE_MAP()
 
 void CSSToolDlg::InitCommList()
@@ -258,7 +261,7 @@ BOOL CSSToolDlg::OnInitDialog()
 	m_ctlMsgOut.SetFont(&m_showFont,FALSE);
 
 	m_sndTimer.SetWindowTextW(L"1000");
-	InitExtItems();
+	ShowExtItems(FALSE);
 	ReSizeMainWindow();
 	return TRUE;
 }
@@ -671,6 +674,7 @@ void CSSToolDlg::OnBnClickedCheckScSend()
 void CSSToolDlg::ReSizeExtItems()
 {
 	CRect rcText,rcStGroup,rcCap,rcTime;
+	CRect rcColorGroup,rcColorBW,rcColorBG,rcColorWB;
 	if(m_bExtEnable)
 	{
 		m_ctlMsgOut.GetWindowRect(rcText);
@@ -697,9 +701,42 @@ void CSSToolDlg::ReSizeExtItems()
 		rcTime.bottom=rcTime.top+EXT_BTN_HEIGHT;
 		rcTime.right=rcTime.left+EXT_MENU_WIDTH-10;
 
+		GetDlgItem(IDC_STATIC_COLOR_MODE)->GetWindowRect(&rcColorGroup);
+		ScreenToClient(&rcColorGroup);
+		rcColorGroup.top=rcStGroup.top+120;
+		rcColorGroup.left=rcStGroup.left;
+		rcColorGroup.right=rcStGroup.right;
+		rcColorGroup.bottom=rcColorGroup.top+130;
+
+		GetDlgItem(IDC_RADIO_BW)->GetWindowRect(&rcColorBW);
+		ScreenToClient(&rcColorBW);
+		rcColorBW.top=rcColorGroup.top+25;
+		rcColorBW.left=rcColorGroup.left+5;
+		rcColorBW.right=rcColorGroup.right;
+		rcColorBW.bottom=rcColorBW.top+20;
+		
+		GetDlgItem(IDC_RADIO_BG)->GetWindowRect(&rcColorBG);
+		ScreenToClient(&rcColorBG);
+		rcColorBG.top=rcColorBW.bottom+2;
+		rcColorBG.left=rcColorGroup.left+5;
+		rcColorBG.right=rcColorGroup.right;
+		rcColorBG.bottom=rcColorBG.top+20;
+
+		GetDlgItem(IDC_RADIO_WB)->GetWindowRect(&rcColorWB);
+		ScreenToClient(&rcColorWB);
+		rcColorWB.top=rcColorBG.bottom+2;
+		rcColorWB.left=rcColorGroup.left+5;
+		rcColorWB.right=rcColorGroup.right;
+		rcColorWB.bottom=rcColorWB.top+20;
+
 		GetDlgItem(IDC_STATIC_EXT_GROUP)->MoveWindow(rcStGroup);
 		GetDlgItem(IDC_BUTTON_CAP)->MoveWindow(rcCap);
 		GetDlgItem(IDC_BTN_TIME)->MoveWindow(rcTime);
+
+		GetDlgItem(IDC_STATIC_COLOR_MODE)->MoveWindow(rcColorGroup);
+		GetDlgItem(IDC_RADIO_WB)->MoveWindow(rcColorWB);
+		GetDlgItem(IDC_RADIO_BW)->MoveWindow(rcColorBW);
+		GetDlgItem(IDC_RADIO_BG)->MoveWindow(rcColorBG);
 
 		InvalidateRect(FALSE);
 		UpdateWindow();
@@ -800,9 +837,14 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 		{
 			OnBnClickedButtonCap();
 		}
-		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>65 && pMsg->wParam<90))
+		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>=65 && pMsg->wParam<=90 && GetKeyState(VK_SHIFT) &&(GetKeyState(VK_CAPITAL)&0x0001)))
 		{
 			m_conn.WriteByte(pMsg->wParam+32);
+			return 1;
+		}
+		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>=97 && pMsg->wParam<=122 && GetKeyState(VK_SHIFT) &&(GetKeyState(VK_CAPITAL)&0x0001)))
+		{
+			m_conn.WriteByte(pMsg->wParam-32);
 			return 1;
 		}
 		else if(this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)
@@ -940,11 +982,31 @@ char CSSToolDlg::FirstDriveFromMask (ULONG unitmask)
    return (i + 'A');
 }
 
-void CSSToolDlg::InitExtItems()
+void CSSToolDlg::ShowExtItems(BOOL bShow)
 {
-	GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_HIDE);
-	GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_HIDE);
-	GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_HIDE);
+	if(!bShow)
+	{
+		GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_HIDE);
+
+		GetDlgItem(IDC_STATIC_COLOR_MODE)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_RADIO_BW)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_RADIO_BG)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_RADIO_WB)->ShowWindow(SW_HIDE);
+	}
+	else
+	{
+		GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_SHOW);
+
+		GetDlgItem(IDC_STATIC_COLOR_MODE)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_RADIO_BW)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_RADIO_BG)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_RADIO_WB)->ShowWindow(SW_SHOW);
+	}
+	
 }
 void CSSToolDlg::OnBnClickedButtonExt()
 {
@@ -958,9 +1020,7 @@ void CSSToolDlg::OnBnClickedButtonExt()
 			m_bExtEnable=TRUE;
 			::MoveWindow(m_ctlMsgOut.m_hWnd,rcText.left,rcText.top,rcText.right-rcText.left,rcText.bottom-rcText.top,0);	
 			GetDlgItem(IDC_BUTTON_EXT)->SetWindowText(L"Òþ²Ø");
-			GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_SHOW);
-			GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_SHOW);
-			GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_SHOW);
+			ShowExtItems(TRUE);
 			ReSizeExtItems();
 			Invalidate(FALSE);
 			UpdateWindow();
@@ -971,9 +1031,7 @@ void CSSToolDlg::OnBnClickedButtonExt()
 			m_bExtEnable=FALSE;
 			::MoveWindow(m_ctlMsgOut.m_hWnd,rcText.left,rcText.top,rcText.right-rcText.left,rcText.bottom-rcText.top,0);	
 			GetDlgItem(IDC_BUTTON_EXT)->SetWindowText(L"À©Õ¹");
-			GetDlgItem(IDC_STATIC_EXT_GROUP)->ShowWindow(SW_HIDE);
-			GetDlgItem(IDC_BUTTON_CAP)->ShowWindow(SW_HIDE);
-			GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_HIDE);
+			ShowExtItems(FALSE);
 		}
 }
 
@@ -1090,4 +1148,19 @@ HBRUSH CSSToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor); 
 	return hbr;
+}
+
+void CSSToolDlg::OnBnClickedRadioBw()
+{
+	m_ctlMsgOut.SetColorMode(BLACK_BACK_WHITE_FONT);
+}
+
+void CSSToolDlg::OnBnClickedRadioBg()
+{
+	m_ctlMsgOut.SetColorMode(BLACK_BACK_GREEN_FONT);
+}
+
+void CSSToolDlg::OnBnClickedRadioWb()
+{
+	m_ctlMsgOut.SetColorMode(WHITE_BACK_BLACK_FONT);
 }
