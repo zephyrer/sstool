@@ -527,8 +527,12 @@ void CSSToolDlg::OnBnClickedButtonSend()
 	}
 	if(!m_TimeSend)
 	m_mSend.SetWindowTextW(L"");
-	memset(strCmdBuf+(g_iInPos),0,128);
-	memcpy(strCmdBuf+(g_iInPos++),szSend,strWrite.GetLength()*sizeof(TCHAR));
+	
+	if(g_iInPos>=MAX_CMD_BUFFER_SIZE)
+		g_iInPos=0;
+	
+	memset(strCmdBuf[g_iInPos],0,128);
+	memcpy(strCmdBuf[g_iInPos++],szSend,strWrite.GetLength()*sizeof(TCHAR));
 	g_iPos=0;
 }
 
@@ -800,6 +804,7 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 {
 	
 	CString strCmd;
+
 	if (pMsg->message==WM_KEYDOWN)
 	{
 		if (pMsg->wParam==VK_RETURN)
@@ -837,14 +842,14 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 		{
 			OnBnClickedButtonCap();
 		}
-		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>=65 && pMsg->wParam<=90 && GetKeyState(VK_SHIFT) &&(GetKeyState(VK_CAPITAL)&0x0001)))
+		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>=65 && pMsg->wParam<=90 && (GetKeyState(VK_SHIFT) || GetKeyState(VK_CAPITAL)&0x0001)))
 		{
-			m_conn.WriteByte(pMsg->wParam+32);
+			m_conn.WriteByte(pMsg->wParam);
 			return 1;
 		}
-		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>=97 && pMsg->wParam<=122 && GetKeyState(VK_SHIFT) &&(GetKeyState(VK_CAPITAL)&0x0001)))
+		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>=65 && pMsg->wParam<=90))
 		{
-			m_conn.WriteByte(pMsg->wParam-32);
+			m_conn.WriteByte(pMsg->wParam+32);
 			return 1;
 		}
 		else if(this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)

@@ -242,7 +242,7 @@ DWORD ConnPort::ReadThreadProc(LPVOID p)
 						}
 					}
 					g_ReadDataBuf[g_iRInPos]=RXBuffer;
-					g_iRInPos=((g_iRInPos++)%MAX_BUFFER_SIZE);
+					g_iRInPos=((g_iRInPos++)%(MAX_BUFFER_SIZE-1));
 					pThis->m_rCount++;
 					dwLength--;
 				}
@@ -299,7 +299,7 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 			bNewLine=FALSE;
 			iReadCount=0;
 			g_ReadDataBuf[g_iROutPos]=0;
-			g_iROutPos=((g_iROutPos++)%MAX_BUFFER_SIZE);
+			g_iROutPos=((g_iROutPos++)%(MAX_BUFFER_SIZE-1));
 			memset(szRev,0,MAX_BUFFER_SIZE);
 		
 		}
@@ -307,7 +307,7 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 		{
 			szRev[iReadCount++]=szTmp;
 			g_ReadDataBuf[g_iROutPos]=0;
-			g_iROutPos=((g_iROutPos++)%MAX_BUFFER_SIZE);
+			g_iROutPos=((g_iROutPos++)%(MAX_BUFFER_SIZE-1));
 		}
 	}
 	g_pExitFlag=1;
@@ -316,7 +316,8 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 
 BOOL ConnPort::WriteByte(TCHAR szChar)
 {
-	g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szChar;
+	g_WriteDataBuf[(g_iWInPos++)%(MAX_BUFFER_SIZE-1)]=szChar;
+	m_wCount++;
 	return  TRUE;
 }
 
@@ -338,11 +339,11 @@ BOOL ConnPort::WriteString(TCHAR *szWriteData,int iLen)
 	{
 		if(m_bHexSend)
 		{
-			g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szCharHex[iLoop];
+			g_WriteDataBuf[(g_iWInPos++)%(MAX_BUFFER_SIZE-1)]=szCharHex[iLoop];
 		}
 		else
 		{
-			g_WriteDataBuf[(g_iWInPos++)%MAX_BUFFER_SIZE]=szWriteData[iLoop];
+			g_WriteDataBuf[(g_iWInPos++)%(MAX_BUFFER_SIZE-1)]=szWriteData[iLoop];
 		}
 		m_wCount++;
 	}
@@ -369,11 +370,12 @@ DWORD ConnPort::WriteThreadProc( LPVOID p )
 		}
 		if(g_iWInPos==g_iWOutPos) 
 		{
+			Sleep(2);
 			continue;
 		}
 		if(INVALID_HANDLE_VALUE!=pThis->m_hPort)
 		{
-			pThis->m_WrriteBuffer=g_WriteDataBuf[(g_iWOutPos++)%MAX_BUFFER_SIZE];
+			pThis->m_WrriteBuffer=g_WriteDataBuf[(g_iWOutPos++)%(MAX_BUFFER_SIZE-1)];
 			if(WriteFile(pThis->m_hPort,&(pThis->m_WrriteBuffer),1,&dwWritten,&osWrite)==FALSE)
 			{
 				if(GetLastError() != ERROR_IO_PENDING)

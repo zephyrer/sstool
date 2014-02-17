@@ -8,8 +8,8 @@
 #include "afxcmn.h"
 #include "SSToolEdit.h"
 
-#define MAX_LINE_SHOW		36000
-#define MAX_HEX_LINE		36000
+#define MAX_LINE_SHOW		2000
+#define MAX_HEX_LINE		2000
 #define MAX_BYTES_NUM		-1
 #define MAX_SAVE_TEXT_NUM	500
 #define EXT_MENU_WIDTH		150
