@@ -288,8 +288,9 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 		}
 		sprintf(&szTmp,"%c",g_ReadDataBuf[g_iROutPos]);
 
-		if(szTmp=='\n')
+		if(szTmp=='\n'||szTmp=='\r')
 		{
+			szRev[iReadCount++]=szTmp;
 			szRev[iReadCount++]='\n';
 			if(TRUE==bBRLast || bNewLine==TRUE)
 				pThis->SendComData(szRev,iReadCount,TRUE);
