@@ -566,11 +566,11 @@ void CSSToolDlg::OnBnClickedButtonSave()
 	int nLength=0;
 	CFile m_CFile;
 	char szbuf[100];
-	int nLoop=0;
 	CTime tt;
-	CString m_strTime;
 	CString m_strTextFile;
 	CString m_strTmp;
+	CString strSubSrcPath;
+	CString strSubDestPath;
 
 	if(m_RecieveData.IsEmpty())
 	{
@@ -582,56 +582,38 @@ void CSSToolDlg::OnBnClickedButtonSave()
 
 	sprintf(szbuf,"SSToolText_%d-%d-%d-%d-%d-%d.txt",
 		tt.GetYear(),tt.GetMonth(),tt.GetDay(),tt.GetHour(),tt.GetMinute(),tt.GetSecond());
-	if(MAX_SAVE_TEXT_NUM==nLoop)
-	{
-		AfxMessageBox(L"保存的文件数过多，请先清理！");
-		return;
-	}
-	m_strTextFile=szbuf;
-	if(!m_CFile.Open(m_strTextFile,CFile::modeCreate| CFile::modeWrite))
-	{
-		AfxMessageBox(L"创建文件失败！");
-		return;
-	}
-	tt=CTime::GetCurrentTime();
-	m_strTime=tt.Format(L"===================\r\n%Y-%m-%d %H:%M:%S\r\n===================\r\n");
-	m_strCache.Empty();
-	m_strCache=ReadCache();
 
-	m_CFile.Write((LPCTSTR)m_strTime,m_strTime.GetLength()*sizeof(TCHAR));
-	m_CFile.Write(m_strCache,m_strCache.GetLength()*sizeof(TCHAR));
+	m_strTextFile=szbuf;
+	strSubSrcPath=CommonGetCurPath()+CACHE_FILE_NAME;
+	strSubDestPath=CommonGetCurPath()+L"\\"+m_strTextFile;
+
+	if(GetFileAttributes(strSubSrcPath)!=0xFFFFFFFF)
+	{
+		CopyFile(strSubSrcPath,strSubDestPath,FALSE);
+		DWORD FileAttr = GetFileAttributes(strSubDestPath);
+		SetFileAttributes(strSubDestPath,FileAttr | FILE_ATTRIBUTE_NORMAL);
+
+		if(!m_CFile.Open(m_strTextFile,CFile::modeWrite))
+		{
+			AfxMessageBox(L"创建文件失败！");
+			return;
+		}
+	}
+	else
+	{
+		if(!m_CFile.Open(m_strTextFile,CFile::modeCreate|CFile::modeWrite))
+		{
+			AfxMessageBox(L"创建文件失败！");
+			return;
+		}
+	}
+	m_CFile.SeekToEnd();
 	m_CFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
 
 	m_CFile.Flush();
 	m_CFile.Close();
 
 	MessageBox(_T("已保存!"),NULL, MB_OK);
-}
-
-CString CSSToolDlg::ReadCache()
-{
-	CFile	RFile;
-	char	szBuf;
-	CString strPath;
-	CString strCache;
-	CString szTmp;
-	strPath.Empty();
-	strPath=CommonGetCurPath();
-	strPath+=CACHE_FILE_NAME;
-	RFile.Open(strPath,CFile::modeRead|CFile::shareDenyWrite);
-	if(RFile.m_hFile==INVALID_HANDLE_VALUE)
-	{
-		return NULL;
-	}
-	while(RFile.Read(&szBuf,1)>0)
-	{
-		szTmp.Format(L"%c",szBuf);
-		strCache+=szTmp;
-	}
-	strCache+=L"\r\n";
-	RFile.Close();
-
-	return strCache;
 }
 void CSSToolDlg::OnTimer(UINT_PTR nIDEvent)
 {
@@ -830,6 +812,8 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 			if(g_iPos<g_iInPos-1)
 			g_iPos++;
 			m_mSend.SetWindowTextW(strCmd);
+			m_mSend.SetSel(-1);
+			return 1;
 		}
 		else if(pMsg->wParam==VK_DOWN)
 		{
@@ -837,6 +821,8 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 			if(g_iPos>0)
 			g_iPos--;
 			m_mSend.SetWindowTextW(strCmd);
+			m_mSend.SetSel(-1);
+			return 1;
 		}
 		else if(pMsg->wParam == 'Z' && GetKeyState(VK_CONTROL)&& GetKeyState(VK_SHIFT))
 		{
@@ -1158,14 +1144,17 @@ HBRUSH CSSToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 void CSSToolDlg::OnBnClickedRadioBw()
 {
 	m_ctlMsgOut.SetColorMode(BLACK_BACK_WHITE_FONT);
+	//m_mSend.SetColorMode(BLACK_BACK_WHITE_FONT);
 }
 
 void CSSToolDlg::OnBnClickedRadioBg()
 {
 	m_ctlMsgOut.SetColorMode(BLACK_BACK_GREEN_FONT);
+	//m_mSend.SetColorMode(BLACK_BACK_GREEN_FONT);
 }
 
 void CSSToolDlg::OnBnClickedRadioWb()
 {
 	m_ctlMsgOut.SetColorMode(WHITE_BACK_BLACK_FONT);
+	//m_mSend.SetColorMode(WHITE_BACK_BLACK_FONT);
 }

@@ -108,8 +108,8 @@ BOOL ConnPort::ClosePort()
 	while(1)
 	{
 		static int iTimeoutCount=0;
-		Sleep(30);	
-		if(50==iTimeoutCount)
+		Sleep(10);	
+		if(40==iTimeoutCount)
 		{
 			TerminateThread(m_hThreadRead,0);
 			TerminateThread(m_hThreadWrite,0);
@@ -117,9 +117,13 @@ BOOL ConnPort::ClosePort()
 			break;
 		}
 		else if(1==g_rExitFlag && 1==g_wExitFlag && 1==g_pExitFlag)
+		{
 			break;
+		}
 		else
-			iTimeoutCount++;	
+		{
+			iTimeoutCount++;
+		}
 	}
     EscapeCommFunction(m_hPort,CLRRTS);
     EscapeCommFunction(m_hPort,CLRDTR);
@@ -288,9 +292,11 @@ DWORD ConnPort::PareDataProc(LPVOID p)
 		}
 		sprintf(&szTmp,"%c",g_ReadDataBuf[g_iROutPos]);
 
-		if(szTmp=='\n'||szTmp=='\r')
+		if(szTmp=='\n')
 		{
-			szRev[iReadCount++]=szTmp;
+			if(szRev[iReadCount-1]=='\r');
+			else
+			szRev[iReadCount++]='\r';
 			szRev[iReadCount++]='\n';
 			if(TRUE==bBRLast || bNewLine==TRUE)
 				pThis->SendComData(szRev,iReadCount,TRUE);
