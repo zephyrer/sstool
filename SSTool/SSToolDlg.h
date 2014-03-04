@@ -8,8 +8,8 @@
 #include "afxcmn.h"
 #include "SSToolEdit.h"
 
-#define MAX_LINE_SHOW		2000
-#define MAX_HEX_LINE		2000
+#define MAX_LINE_SHOW		8000
+#define MAX_HEX_LINE		8000
 #define MAX_BYTES_NUM		-1
 #define MAX_SAVE_TEXT_NUM	500
 #define EXT_MENU_WIDTH		150
@@ -97,7 +97,6 @@ protected:
 	void RefreshComPort();
 	void ReSizeExtItems();
 	CString CommonGetCurPath(); 
-	CString  ReadCache(); 
 	char FirstDriveFromMask (ULONG unitmask);
 	BOOL ReleaseExe(CString strFileName,WORD wResID,CString strFileType);
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
