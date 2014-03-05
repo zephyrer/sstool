@@ -173,6 +173,8 @@ BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_RADIO_BW, &CSSToolDlg::OnBnClickedRadioBw)
 	ON_BN_CLICKED(IDC_RADIO_BG, &CSSToolDlg::OnBnClickedRadioBg)
 	ON_BN_CLICKED(IDC_RADIO_WB, &CSSToolDlg::OnBnClickedRadioWb)
+	ON_BN_CLICKED(IDC_BTN_G1, &CSSToolDlg::OnBnClickedBtnG1)
+	ON_BN_CLICKED(IDC_BTN_G2, &CSSToolDlg::OnBnClickedBtnG2)
 END_MESSAGE_MAP()
 
 void CSSToolDlg::InitCommList()
@@ -661,6 +663,7 @@ void CSSToolDlg::ReSizeExtItems()
 {
 	CRect rcText,rcStGroup,rcCap,rcTime;
 	CRect rcColorGroup,rcColorBW,rcColorBG,rcColorWB;
+	CRect rcSendGroup,rcSendBox1,rcSendBox2,rcSendBtn1,rcSendBtn2;
 	if(m_bExtEnable)
 	{
 		m_ctlMsgOut.GetWindowRect(rcText);
@@ -671,28 +674,28 @@ void CSSToolDlg::ReSizeExtItems()
 		rcStGroup.top=rcText.top+3;
 		rcStGroup.left=rcText.right+5;
 		rcStGroup.right=rcText.right+EXT_MENU_WIDTH-1;
+		rcStGroup.bottom=rcStGroup.top+60;
 
 		GetDlgItem(IDC_BUTTON_CAP)->GetWindowRect(&rcCap);
 		ScreenToClient(&rcCap);
-		rcCap.top=rcStGroup.top+30;
+		rcCap.top=rcStGroup.top+18;
 		rcCap.left=rcStGroup.left+1;
 		rcCap.bottom=rcCap.top+EXT_BTN_HEIGHT;
-		rcCap.right=rcCap.left+EXT_MENU_WIDTH-10;
-
+		rcCap.right=rcCap.left+60;
 
 		GetDlgItem(IDC_BTN_TIME)->GetWindowRect(&rcTime);
 		ScreenToClient(&rcTime);
-		rcTime.left=rcCap.left+1;
-		rcTime.top=rcCap.bottom+1;
+		rcTime.left=rcCap.right+1;
+		rcTime.top=rcStGroup.top+18;
 		rcTime.bottom=rcTime.top+EXT_BTN_HEIGHT;
-		rcTime.right=rcTime.left+EXT_MENU_WIDTH-10;
+		rcTime.right=rcStGroup.right-1;
 
 		GetDlgItem(IDC_STATIC_COLOR_MODE)->GetWindowRect(&rcColorGroup);
 		ScreenToClient(&rcColorGroup);
-		rcColorGroup.top=rcStGroup.top+120;
+		rcColorGroup.top=rcStGroup.bottom+2;
 		rcColorGroup.left=rcStGroup.left;
 		rcColorGroup.right=rcStGroup.right;
-		rcColorGroup.bottom=rcColorGroup.top+130;
+		rcColorGroup.bottom=rcColorGroup.top+100;
 
 		GetDlgItem(IDC_RADIO_BW)->GetWindowRect(&rcColorBW);
 		ScreenToClient(&rcColorBW);
@@ -715,6 +718,41 @@ void CSSToolDlg::ReSizeExtItems()
 		rcColorWB.right=rcColorGroup.right;
 		rcColorWB.bottom=rcColorWB.top+20;
 
+		GetDlgItem(IDC_STATIC_MG)->GetWindowRect(&rcSendGroup);
+		ScreenToClient(&rcSendGroup);
+		rcSendGroup.top=rcColorGroup.bottom+5;
+		rcSendGroup.left=rcColorGroup.left;
+		rcSendGroup.right=rcColorGroup.right;
+		rcSendGroup.bottom=rcSendGroup.top+265;
+
+		GetDlgItem(IDC_EDIT_G1)->GetWindowRect(&rcSendBox1);
+		ScreenToClient(&rcSendBox1);
+		rcSendBox1.top=rcSendGroup.top+17;
+		rcSendBox1.left=rcSendGroup.left+1;
+		rcSendBox1.right=rcSendGroup.right-1;
+		rcSendBox1.bottom=rcSendGroup.top+120;
+
+		GetDlgItem(IDC_EDIT_G2)->GetWindowRect(&rcSendBox2);
+		ScreenToClient(&rcSendBox2);
+		rcSendBox2.top=rcSendBox1.bottom+1;
+		rcSendBox2.left=rcSendGroup.left+1;
+		rcSendBox2.right=rcSendGroup.right-1;
+		rcSendBox2.bottom=rcSendBox2.top+115;
+
+		GetDlgItem(IDC_BTN_G1)->GetWindowRect(&rcSendBtn1);
+		ScreenToClient(&rcSendBtn1);
+		rcSendBtn1.top=rcSendBox2.bottom+1;
+		rcSendBtn1.left=rcSendGroup.left+1;
+		rcSendBtn1.right=rcSendGroup.left+65;
+		rcSendBtn1.bottom=rcSendGroup.bottom-1;
+
+		GetDlgItem(IDC_BTN_G2)->GetWindowRect(&rcSendBtn2);
+		ScreenToClient(&rcSendBtn2);
+		rcSendBtn2.top=rcSendBox2.bottom+1;
+		rcSendBtn2.left=rcSendGroup.left+66;
+		rcSendBtn2.right=rcSendGroup.right-1;
+		rcSendBtn2.bottom=rcSendGroup.bottom-1;
+
 		GetDlgItem(IDC_STATIC_EXT_GROUP)->MoveWindow(rcStGroup);
 		GetDlgItem(IDC_BUTTON_CAP)->MoveWindow(rcCap);
 		GetDlgItem(IDC_BTN_TIME)->MoveWindow(rcTime);
@@ -723,6 +761,11 @@ void CSSToolDlg::ReSizeExtItems()
 		GetDlgItem(IDC_RADIO_WB)->MoveWindow(rcColorWB);
 		GetDlgItem(IDC_RADIO_BW)->MoveWindow(rcColorBW);
 		GetDlgItem(IDC_RADIO_BG)->MoveWindow(rcColorBG);
+		GetDlgItem(IDC_STATIC_MG)->MoveWindow(rcSendGroup);
+		GetDlgItem(IDC_EDIT_G1)->MoveWindow(rcSendBox1);
+		GetDlgItem(IDC_EDIT_G2)->MoveWindow(rcSendBox2);
+		GetDlgItem(IDC_BTN_G1)->MoveWindow(rcSendBtn1);
+		GetDlgItem(IDC_BTN_G2)->MoveWindow(rcSendBtn2);
 
 		InvalidateRect(FALSE);
 		UpdateWindow();
@@ -985,6 +1028,12 @@ void CSSToolDlg::ShowExtItems(BOOL bShow)
 		GetDlgItem(IDC_RADIO_BW)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_RADIO_BG)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_RADIO_WB)->ShowWindow(SW_HIDE);
+
+		GetDlgItem(IDC_STATIC_MG)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_EDIT_G1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_EDIT_G2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_BTN_G1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_BTN_G2)->ShowWindow(SW_HIDE);
 	}
 	else
 	{
@@ -996,6 +1045,12 @@ void CSSToolDlg::ShowExtItems(BOOL bShow)
 		GetDlgItem(IDC_RADIO_BW)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_RADIO_BG)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_RADIO_WB)->ShowWindow(SW_SHOW);
+
+		GetDlgItem(IDC_STATIC_MG)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_EDIT_G1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_EDIT_G2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_BTN_G1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_BTN_G2)->ShowWindow(SW_SHOW);
 	}
 	
 }
@@ -1144,17 +1199,24 @@ HBRUSH CSSToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 void CSSToolDlg::OnBnClickedRadioBw()
 {
 	m_ctlMsgOut.SetColorMode(BLACK_BACK_WHITE_FONT);
-	//m_mSend.SetColorMode(BLACK_BACK_WHITE_FONT);
 }
 
 void CSSToolDlg::OnBnClickedRadioBg()
 {
 	m_ctlMsgOut.SetColorMode(BLACK_BACK_GREEN_FONT);
-	//m_mSend.SetColorMode(BLACK_BACK_GREEN_FONT);
 }
 
 void CSSToolDlg::OnBnClickedRadioWb()
 {
 	m_ctlMsgOut.SetColorMode(WHITE_BACK_BLACK_FONT);
-	//m_mSend.SetColorMode(WHITE_BACK_BLACK_FONT);
+}
+
+
+void CSSToolDlg::OnBnClickedBtnG1()
+{
+
+}
+void CSSToolDlg::OnBnClickedBtnG2()
+{
+	
 }
