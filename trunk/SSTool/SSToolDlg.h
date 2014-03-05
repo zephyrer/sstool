@@ -148,4 +148,6 @@ public:
 	afx_msg void OnBnClickedRadioBw();
 	afx_msg void OnBnClickedRadioBg();
 	afx_msg void OnBnClickedRadioWb();
+	afx_msg void OnBnClickedBtnG1();
+	afx_msg void OnBnClickedBtnG2();
 };
