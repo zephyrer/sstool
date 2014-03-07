@@ -8,13 +8,10 @@
 #include "afxcmn.h"
 #include "SSToolEdit.h"
 
-#define MAX_LINE_SHOW		8000
-#define MAX_HEX_LINE		8000
 #define MAX_BYTES_NUM		-1
 #define MAX_SAVE_TEXT_NUM	500
 #define EXT_MENU_WIDTH		150
 #define EXT_BTN_HEIGHT		22
-#define CACHE_FILE_NAME		L"\\sstool_cache.txt"
 #define MAX_CMD_BUFFER_SIZE	20
 #define TIME_BAR_WIDTH		120
 
@@ -79,20 +76,17 @@ protected:
 	int	  m_iCurParity;
 	int   m_iComCounts;
 	CString	m_strCaption;
-	CString m_RecieveData;
 	CString m_strTimeSotre;
 	CString m_strCache;
-	CFont	m_showFont;
 	BOOL	m_bExtEnable;
 	BOOL	m_TimeSend;
 	BOOL	m_bSendBR;
 	BOOL	m_bTimeShow;
 	UINT_PTR m_TimeHandle;
+
 	void InitCommList();
 	void ShowExtItems(BOOL bShow);
-
 	void ReSizeMainWindow();
-	void EnterWorkPath();
 	void UpdateItem();
 	void RefreshComPort();
 	void ReSizeExtItems();
@@ -100,7 +94,6 @@ protected:
 	char FirstDriveFromMask (ULONG unitmask);
 	BOOL ReleaseExe(CString strFileName,WORD wResID,CString strFileType);
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);
-	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
@@ -117,12 +110,15 @@ public:
 	CComboBox	m_cbDataBits;
 	CComboBox	m_cbParity;
 	CSSToolEdit	m_ctlMsgOut;
-	CEdit		m_mSend;
+	CSSToolEdit	m_mSend;
 	CButton		m_connBtn;
 	CEdit		m_sndTimer;
 	CButton		m_hexSnd;
 	CButton		m_scSnd;
 	CButton		m_SendBtn;
+	CSSToolEdit m_extSendMsg1;
+	CSSToolEdit m_extSendMsg2;
+
 	afx_msg void OnBnClickedButtonSave();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedCheckHexsend();
@@ -150,4 +146,5 @@ public:
 	afx_msg void OnBnClickedRadioWb();
 	afx_msg void OnBnClickedBtnG1();
 	afx_msg void OnBnClickedBtnG2();
+	
 };
