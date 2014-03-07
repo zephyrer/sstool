@@ -14,6 +14,8 @@ CSSToolEdit::CSSToolEdit()
 	m_txtColor =	RGB(255,255,255);
     m_bkColor  =	RGB(31,31,31);
     m_bkBrush.CreateSolidBrush( RGB(31,31,31) );
+	m_RecieveData = L"";
+	m_showFont.CreateFont(15,8,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"DejaVu Sans Mono");
 }
 
 CSSToolEdit::~CSSToolEdit()
@@ -28,8 +30,16 @@ END_MESSAGE_MAP()
 HBRUSH CSSToolEdit::CtlColor(CDC* pDC, UINT nCtlColor)
 {
 	pDC->SetBkColor( m_bkColor);
-	pDC->SetTextColor(m_txtColor);	
+	pDC->SetTextColor(m_txtColor);
 	return (HBRUSH)m_bkBrush;
+}
+
+void CSSToolEdit::EnableMonospacedFont(BOOL bEnable)
+{
+	if(bEnable)
+	{
+		this->SetFont(&m_showFont,FALSE);
+	}
 }
 void CSSToolEdit::SetColorMode(int nMode)
 {
@@ -64,4 +74,149 @@ void CSSToolEdit::SetColorMode(int nMode)
 	}
 	InvalidateRect(FALSE);
 	UpdateWindow();
+}
+CString CSSToolEdit::AppGetCurPath()  
+{   
+   CString    sPath;   
+   GetModuleFileName(NULL,sPath.GetBufferSetLength(MAX_PATH+1),MAX_PATH);   
+   sPath.ReleaseBuffer();   
+   int    nPos;   
+   nPos=sPath.ReverseFind('\\');   
+   sPath=sPath.Left(nPos);   
+   return    sPath;   
+}
+void CSSToolEdit::EnterWorkPath()
+{
+	int		nLength=0;
+	CString strPath;
+	strPath.Empty();
+	strPath=AppGetCurPath();
+	nLength=strPath.GetLength();
+
+	for(int nLoop=0;nLoop<nLength;nLoop++)
+	{
+		if(strPath.GetAt(nLoop)=='\\')
+		{
+			CreateDirectory(strPath.Left(nLoop+1),NULL);
+		}
+	}
+	CreateDirectory(strPath,NULL);
+	SetCurrentDirectory(strPath);
+}
+void  CSSToolEdit::OutMsg(CString strMsg,BOOL bEnableHex)
+{
+	int iLen=0;
+	char szbuf[MAX_PATH];
+	CString strPath;
+	if(this->GetLineCount()>((bEnableHex==TRUE)?MAX_HEX_LINE:MAX_LINE_SHOW))
+	{
+		CFile m_CCacheFile;
+		EnterWorkPath();
+		strPath.Empty();
+		strPath=AppGetCurPath();
+		strPath+=CACHE_FILE_NAME;
+		sprintf(szbuf,"%s",strPath);
+		if((access(szbuf,0)==-1))
+		{
+			if(!m_CCacheFile.Open(strPath,CFile::modeCreate| CFile::modeWrite|CFile::modeNoTruncate))
+			{
+				AfxMessageBox(L"缓存失败！");
+				return;
+			}
+			DWORD FileAttr = GetFileAttributes(strPath);
+			SetFileAttributes(strPath,FileAttr | FILE_ATTRIBUTE_HIDDEN);
+		}
+		else
+		{
+			if(!m_CCacheFile.Open(strPath,CFile::modeWrite|CFile::modeNoTruncate))
+			{
+				AfxMessageBox(L"缓存失败！");
+				return;
+			}
+		}
+		m_CCacheFile.SeekToEnd();
+		m_CCacheFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
+
+		m_CCacheFile.Flush();
+		m_CCacheFile.Close();
+
+		m_RecieveData.Empty();
+		this->SetSel(0,-1);
+		this->ReplaceSel(L" ");
+	}
+	iLen=this->GetWindowTextLengthW();
+	this->SetSel(iLen,iLen);
+	this->ReplaceSel((LPCTSTR)strMsg);
+	iLen+=strMsg.GetLength();
+
+	m_RecieveData+=strMsg;
+}
+void CSSToolEdit::ClearData()
+{
+	CString strPath;
+	strPath.Empty();
+	m_RecieveData.Empty();
+	this->SetSel(0,-1);
+	this->ReplaceSel(L" ");
+
+	strPath=AppGetCurPath();
+	strPath+=CACHE_FILE_NAME;
+	DeleteFile(strPath);
+	UpdateData(FALSE);
+}
+BOOL CSSToolEdit::SaveDataToFile()
+{
+	int nLength=0;
+	CFile m_CFile;
+	char szbuf[100];
+	CTime tt;
+	CString m_strTextFile;
+	CString m_strTmp;
+	CString strSubSrcPath;
+	CString strSubDestPath;
+
+	if(m_RecieveData.IsEmpty())
+	{
+		AfxMessageBox(L"没有数据，保存失败！");
+		return 0;
+	}
+	EnterWorkPath();
+	tt=CTime::GetCurrentTime();
+
+	sprintf(szbuf,"SSToolText_%d-%d-%d-%d-%d-%d.txt",
+		tt.GetYear(),tt.GetMonth(),tt.GetDay(),tt.GetHour(),tt.GetMinute(),tt.GetSecond());
+
+	m_strTextFile=szbuf;
+	strSubSrcPath=AppGetCurPath()+CACHE_FILE_NAME;
+	strSubDestPath=AppGetCurPath()+L"\\"+m_strTextFile;
+
+	if(GetFileAttributes(strSubSrcPath)!=0xFFFFFFFF)
+	{
+		CopyFile(strSubSrcPath,strSubDestPath,FALSE);
+		DWORD FileAttr = GetFileAttributes(strSubDestPath);
+		SetFileAttributes(strSubDestPath,FileAttr | FILE_ATTRIBUTE_NORMAL);
+
+		if(!m_CFile.Open(m_strTextFile,CFile::modeWrite))
+		{
+			AfxMessageBox(L"创建文件失败！");
+			return 0;
+		}
+	}
+	else
+	{
+		if(!m_CFile.Open(m_strTextFile,CFile::modeCreate|CFile::modeWrite))
+		{
+			AfxMessageBox(L"创建文件失败！");
+			return 0;
+		}
+	}
+	m_CFile.SeekToEnd();
+	m_CFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
+
+	m_CFile.Flush();
+	m_CFile.Close();
+
+	MessageBox(_T("已保存!"),NULL, MB_OK);
+
+	return TRUE;
 }

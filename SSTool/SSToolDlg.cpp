@@ -8,7 +8,6 @@
 #include "afxdialogex.h"
 #include "ConnPort.h"
 #include "stdio.h"
-#include "io.h"
 #include "Dbt.h"
 #include <strsafe.h>
 #pragma comment(lib, "user32.lib")
@@ -143,6 +142,8 @@ void CSSToolDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHECK_SC_SEND, m_scSnd);
 	DDX_Control(pDX, IDC_BUTTON_SEND, m_SendBtn);
 	DDX_Control(pDX, IDC_STATE_ON, m_StateTip);
+	DDX_Control(pDX, IDC_EDIT_G1, m_extSendMsg1);
+	DDX_Control(pDX, IDC_EDIT_G2, m_extSendMsg2);
 }
 
 BEGIN_MESSAGE_MAP(CSSToolDlg, CDialogEx)
@@ -258,10 +259,11 @@ BOOL CSSToolDlg::OnInitDialog()
 
 	InitCommList();
 	m_ctlMsgOut.SetLimitText(MAX_BYTES_NUM);
-
-	m_showFont.CreateFont(16,9,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Courier New");
-	m_ctlMsgOut.SetFont(&m_showFont,FALSE);
-
+	m_mSend.SetColorMode(WHITE_BACK_BLACK_FONT);
+	m_extSendMsg1.SetColorMode(WHITE_BACK_BLACK_FONT);
+	m_extSendMsg2.SetColorMode(WHITE_BACK_BLACK_FONT);
+	m_mSend.EnableMonospacedFont(TRUE);
+	m_ctlMsgOut.EnableMonospacedFont(TRUE);
 	m_sndTimer.SetWindowTextW(L"1000");
 	ShowExtItems(FALSE);
 	ReSizeMainWindow();
@@ -326,7 +328,6 @@ HCURSOR CSSToolDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
-
 void CSSToolDlg::UpdateItem()
 {
 		CRect   rect; 
@@ -373,72 +374,6 @@ void CSSToolDlg::UpdateItem()
 		strUpdate.Format(L"%d",iWriteBytes);
 		GetDlgItem(IDC_STATIC_WRITE_COUNT)->SetWindowTextW(strUpdate);
 		InvalidateRect(rect,FALSE);
-}
-void CSSToolDlg::EnterWorkPath()
-{
-	int		nLength=0;
-	CString strPath;
-	strPath.Empty();
-	strPath=CommonGetCurPath();
-	nLength=strPath.GetLength();
-
-	for(int nLoop=0;nLoop<nLength;nLoop++)
-	{
-		if(strPath.GetAt(nLoop)=='\\')
-		{
-			CreateDirectory(strPath.Left(nLoop+1),NULL);
-		}
-	}
-	CreateDirectory(strPath,NULL);
-	SetCurrentDirectory(strPath);
-}
-void  CSSToolDlg::OutMsg(CString strMsg)
-{
-	int iLen=0;
-	char szbuf[MAX_PATH];
-	CString strPath;
-	if(m_ctlMsgOut.GetLineCount()>((m_conn.GetHexShowEnable()==TRUE)?MAX_HEX_LINE:MAX_LINE_SHOW))
-	{
-		CFile m_CCacheFile;
-		EnterWorkPath();
-		strPath.Empty();
-		strPath=CommonGetCurPath();
-		strPath+=CACHE_FILE_NAME;
-		sprintf(szbuf,"%s",strPath);
-		if((access(szbuf,0)==-1))
-		{
-			if(!m_CCacheFile.Open(strPath,CFile::modeCreate| CFile::modeWrite|CFile::modeNoTruncate))
-			{
-				AfxMessageBox(L"缓存失败！");
-				return;
-			}
-			DWORD FileAttr = GetFileAttributes(strPath);
-			SetFileAttributes(strPath,FileAttr | FILE_ATTRIBUTE_HIDDEN);
-		}
-		else
-		{
-			if(!m_CCacheFile.Open(strPath,CFile::modeWrite|CFile::modeNoTruncate))
-			{
-				AfxMessageBox(L"缓存失败！");
-				return;
-			}
-		}
-		m_CCacheFile.SeekToEnd();
-		m_CCacheFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
-
-		m_CCacheFile.Flush();
-		m_CCacheFile.Close();
-
-		m_RecieveData.Empty();
-		m_ctlMsgOut.SetSel(0,-1);
-		m_ctlMsgOut.ReplaceSel(L" ");
-	}
-	iLen=m_ctlMsgOut.GetWindowTextLengthW();
-	m_ctlMsgOut.SetSel(iLen,iLen);
-	m_ctlMsgOut.ReplaceSel((LPCTSTR)strMsg);
-	iLen+=strMsg.GetLength();
-
-	m_RecieveData+=strMsg;
 }
 void CSSToolDlg::OnBnClickedButtonCon()
 {
@@ -493,18 +428,9 @@ void CSSToolDlg::OnBnClickedButtonCon()
 }
 void CSSToolDlg::OnBnClickedButtonClear()
 {
-	CString strPath;
-	strPath.Empty();
 	m_strCache.Empty();
-	m_RecieveData.Empty();
-
-	m_ctlMsgOut.SetSel(0,-1);
-	m_ctlMsgOut.ReplaceSel(L" ");
 	m_conn.EmptyBytesCount();
-	strPath=CommonGetCurPath();
-	strPath+=CACHE_FILE_NAME;
-	DeleteFile(strPath);
-	UpdateData(FALSE);
+	m_ctlMsgOut.ClearData();
 	UpdateItem();
 }
 
@@ -522,11 +448,6 @@ void CSSToolDlg::OnBnClickedButtonSend()
 	m_conn.WriteString(szSend,strWrite.GetLength());
 	if(TRUE==m_bSendBR)
 		m_conn.WriteString(L"\n",1);
-	if(m_conn.IsConnect())
-	{
-		this->OutMsg(strWrite);
-		this->OutMsg(L"\r\n");
-	}
 	if(!m_TimeSend)
 	m_mSend.SetWindowTextW(L"");
 	
@@ -553,69 +474,9 @@ BOOL CSSToolDlg::Char2Hex(TCHAR *szBuffer,TCHAR *szOut,int iLen)
 	}
     return TRUE;
 }
-CString CSSToolDlg::CommonGetCurPath()  
-{   
-   CString    sPath;   
-   GetModuleFileName(NULL,sPath.GetBufferSetLength(MAX_PATH+1),MAX_PATH);   
-   sPath.ReleaseBuffer();   
-   int    nPos;   
-   nPos=sPath.ReverseFind('\\');   
-   sPath=sPath.Left(nPos);   
-   return    sPath;   
-}
 void CSSToolDlg::OnBnClickedButtonSave()
 {
-	int nLength=0;
-	CFile m_CFile;
-	char szbuf[100];
-	CTime tt;
-	CString m_strTextFile;
-	CString m_strTmp;
-	CString strSubSrcPath;
-	CString strSubDestPath;
-
-	if(m_RecieveData.IsEmpty())
-	{
-		AfxMessageBox(L"没有数据，保存失败！");
-		return;
-	}
-	EnterWorkPath();
-	tt=CTime::GetCurrentTime();
-
-	sprintf(szbuf,"SSToolText_%d-%d-%d-%d-%d-%d.txt",
-		tt.GetYear(),tt.GetMonth(),tt.GetDay(),tt.GetHour(),tt.GetMinute(),tt.GetSecond());
-
-	m_strTextFile=szbuf;
-	strSubSrcPath=CommonGetCurPath()+CACHE_FILE_NAME;
-	strSubDestPath=CommonGetCurPath()+L"\\"+m_strTextFile;
-
-	if(GetFileAttributes(strSubSrcPath)!=0xFFFFFFFF)
-	{
-		CopyFile(strSubSrcPath,strSubDestPath,FALSE);
-		DWORD FileAttr = GetFileAttributes(strSubDestPath);
-		SetFileAttributes(strSubDestPath,FileAttr | FILE_ATTRIBUTE_NORMAL);
-
-		if(!m_CFile.Open(m_strTextFile,CFile::modeWrite))
-		{
-			AfxMessageBox(L"创建文件失败！");
-			return;
-		}
-	}
-	else
-	{
-		if(!m_CFile.Open(m_strTextFile,CFile::modeCreate|CFile::modeWrite))
-		{
-			AfxMessageBox(L"创建文件失败！");
-			return;
-		}
-	}
-	m_CFile.SeekToEnd();
-	m_CFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
-
-	m_CFile.Flush();
-	m_CFile.Close();
-
-	MessageBox(_T("已保存!"),NULL, MB_OK);
+	m_ctlMsgOut.SaveDataToFile();
 }
 void CSSToolDlg::OnTimer(UINT_PTR nIDEvent)
 {
@@ -771,6 +632,10 @@ void CSSToolDlg::ReSizeExtItems()
 		UpdateWindow();
 	}
 }
+void  CSSToolDlg::OutMsg(CString strMsg)
+{
+	m_ctlMsgOut.OutMsg(strMsg,m_conn.GetHexShowEnable());
+}
 void CSSToolDlg::ReSizeMainWindow()
 {
 	CRect rcConn,rcText,rcDlg,rcSendBox,rcSendBtn;
@@ -827,72 +692,95 @@ void CSSToolDlg::OnSize(UINT nType, int cx, int cy)
 }
 BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 {
-	
 	CString strCmd;
 
 	if (pMsg->message==WM_KEYDOWN)
 	{
-		if (pMsg->wParam==VK_RETURN)
+		switch(pMsg->wParam)
 		{
-			if(this->GetFocus()->m_hWnd==m_mSend.m_hWnd)
+		case VK_RETURN:
 			{
-				OnBnClickedButtonSend();
+				if(this->GetFocus()->m_hWnd==m_mSend.m_hWnd)
+				{
+					OnBnClickedButtonSend();
+					return 1;
+				}
+				else if(this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)
+				{
+					m_conn.WriteByte(L'\n');
+				}
+				else if(this->GetFocus()->m_hWnd == m_extSendMsg1.m_hWnd)
+				{
+					m_extSendMsg1.OutMsg(L"\r\n");
+				}
+				else if(this->GetFocus()->m_hWnd == m_extSendMsg2.m_hWnd)
+				{
+					m_extSendMsg2.OutMsg(L"\r\n");
+				}
+			}
+			break;
+		case VK_SPACE:
+			{
+				if(this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)
+				{
+					m_conn.WriteByte(0x20);
+				}
+			}
+			break;
+		case VK_UP:
+			{
+				strCmd=strCmdBuf[g_iInPos-g_iPos-1];
+				if(g_iPos<g_iInPos-1)
+				g_iPos++;
+				m_mSend.SetWindowTextW(strCmd);
+				m_mSend.SetSel(-1);
 				return 1;
 			}
-			else if(this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)
+			break;
+		case VK_DOWN:
 			{
-				m_conn.WriteByte(L'\n');
-				this->OutMsg(L"\r\n");
+				strCmd=strCmdBuf[g_iInPos-g_iPos-1];
+				if(g_iPos>0)
+				g_iPos--;
+				m_mSend.SetWindowTextW(strCmd);
+				m_mSend.SetSel(-1);
+				return 1;
 			}
-		}
-		else if((pMsg->wParam==VK_SPACE) && (this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd))
-		{
-			m_conn.WriteByte(0x20);
-		}
-		else if(pMsg->wParam==VK_UP)
-		{
-			strCmd=strCmdBuf[g_iInPos-g_iPos-1];
-			if(g_iPos<g_iInPos-1)
-			g_iPos++;
-			m_mSend.SetWindowTextW(strCmd);
-			m_mSend.SetSel(-1);
-			return 1;
-		}
-		else if(pMsg->wParam==VK_DOWN)
-		{
-			strCmd=strCmdBuf[g_iInPos-g_iPos-1];
-			if(g_iPos>0)
-			g_iPos--;
-			m_mSend.SetWindowTextW(strCmd);
-			m_mSend.SetSel(-1);
-			return 1;
-		}
-		else if(pMsg->wParam == 'Z' && GetKeyState(VK_CONTROL)&& GetKeyState(VK_SHIFT))
-		{
-			OnBnClickedButtonCap();
-		}
-		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>=65 && pMsg->wParam<=90 && (GetKeyState(VK_SHIFT) || GetKeyState(VK_CAPITAL)&0x0001)))
-		{
-			m_conn.WriteByte(pMsg->wParam);
-			return 1;
-		}
-		else if((this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)&&(pMsg->wParam>=65 && pMsg->wParam<=90))
-		{
-			m_conn.WriteByte(pMsg->wParam+32);
-			return 1;
-		}
-		else if(this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)
-		{
-			if(pMsg->wParam==190)
-			m_conn.WriteByte(0x2E);
-			else
-			m_conn.WriteByte(pMsg->wParam);
-			return 1;
+			break;
+		case VK_SHIFT:
+		case VK_CAPITAL:
+			break;
+		default:
+			{
+				if(this->GetFocus()->m_hWnd == m_ctlMsgOut.m_hWnd)
+				{
+					if(pMsg->wParam>=65 && pMsg->wParam<=90 && 
+						((GetKeyState(VK_CAPITAL)&0x0001&&!(GetAsyncKeyState( VK_SHIFT) & 0x8000))
+						||((!GetKeyState(VK_CAPITAL)&0x0001)&&(GetAsyncKeyState( VK_SHIFT) & 0x8000))))
+					{
+						m_conn.WriteByte(pMsg->wParam);
+						return 1;
+					} 
+					else if(pMsg->wParam>=65 && pMsg->wParam<=90)
+					{
+						m_conn.WriteByte(pMsg->wParam+32);
+						return 1;
+					}
+					else if(pMsg->wParam==190)
+					{
+						m_conn.WriteByte(0x2E);
+					}
+					else
+					{
+						m_conn.WriteByte(pMsg->wParam);
+						return 1;
+					}
+				}
+			}
+			break;
 		}
 	}
-
 	return CDialogEx::PreTranslateMessage(pMsg);
-
 }
 void CSSToolDlg::OnBnClickedCheckHexShow()
 {
@@ -952,6 +840,7 @@ void CSSToolDlg::RefreshComPort()
 
 void CSSToolDlg::OnCbnCloseupComboComlist()
 {
+
 }
 
 LRESULT CSSToolDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
@@ -1101,6 +990,16 @@ BOOL CSSToolDlg::ReleaseExe(CString strFileName,WORD wResID,CString strFileType)
     CloseHandle( hFile );   
     return TRUE;   
 }
+CString CSSToolDlg::CommonGetCurPath()  
+{   
+   CString    sPath;   
+   GetModuleFileName(NULL,sPath.GetBufferSetLength(MAX_PATH+1),MAX_PATH);   
+   sPath.ReleaseBuffer();   
+   int    nPos;   
+   nPos=sPath.ReverseFind('\\');   
+   sPath=sPath.Left(nPos);   
+   return    sPath;   
+}
 void CSSToolDlg::OnBnClickedButtonCap()
 {
 	CString strPath;
@@ -1123,9 +1022,7 @@ void CSSToolDlg::OnBnClickedButtonCap()
 		ShellExecuteEx(&ShExecInfo);
 		WaitForSingleObject(ShExecInfo.hProcess,INFINITE);
 	}
-
 	DeleteFile(strPath);
-
 }
 void CSSToolDlg::OnBnClickedBtnCopy()
 {
@@ -1170,7 +1067,6 @@ void CSSToolDlg::OnClose()
 	CDialogEx::OnClose();
 }
 
-
 void CSSToolDlg::OnBnClickedCheckBr()
 {
 	if(((CButton *)GetDlgItem(IDC_CHECK_BR))-> GetCheck())
@@ -1211,12 +1107,29 @@ void CSSToolDlg::OnBnClickedRadioWb()
 	m_ctlMsgOut.SetColorMode(WHITE_BACK_BLACK_FONT);
 }
 
-
 void CSSToolDlg::OnBnClickedBtnG1()
 {
-
+	TCHAR *szSend=NULL;
+	CString strWrite;
+	strWrite.Empty();
+	m_extSendMsg1.GetWindowTextW(strWrite);
+	szSend=strWrite.GetBuffer(strWrite.GetLength());
+	if(strWrite.IsEmpty())
+	{
+		return;
+	}
+	m_conn.WriteString(szSend,strWrite.GetLength());
 }
 void CSSToolDlg::OnBnClickedBtnG2()
 {
-	
+	TCHAR *szSend=NULL;
+	CString strWrite;
+	strWrite.Empty();
+	m_extSendMsg2.GetWindowTextW(strWrite);
+	szSend=strWrite.GetBuffer(strWrite.GetLength());
+	if(strWrite.IsEmpty())
+	{
+		return;
+	}
+	m_conn.WriteString(szSend,strWrite.GetLength());
 }
