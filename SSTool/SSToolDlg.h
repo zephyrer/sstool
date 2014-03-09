@@ -7,6 +7,7 @@
 #include"resource.h"
 #include "afxcmn.h"
 #include "SSToolEdit.h"
+#include "ParseConfigFile.h"
 
 #define MAX_BYTES_NUM		-1
 #define MAX_SAVE_TEXT_NUM	500
@@ -14,45 +15,6 @@
 #define EXT_BTN_HEIGHT		22
 #define MAX_CMD_BUFFER_SIZE	20
 #define TIME_BAR_WIDTH		120
-
-typedef enum
-{
-	COM1=0,
-	COM2,
-	COM3,
-	COM4,
-	COM5,
-	COM6,
-	COM7,
-	COM8,
-	COM9,
-}COMM_LIST;
-
-typedef enum
-{
-	BAUD110=0,
-	BAUD300,
-	BAUD600,
-	BAUD1200,
-	BAUD2400,
-	BAUD4800,
-	BAUD9600,
-	BAUD14400,
-	BAUD19200,
-	BAUD38400,
-	BAUD57600,
-	BAUD115200,
-	BAUD128000,
-	BAUD256000,
-
-}COM_Baudrate_t;
-
-typedef enum
-{
-	DATABIT6=0,
-	DATABIT7=1,
-	DATABIT8=2,
-}COM_DataBits_t;
 
 // CSSToolDlg dialog
 class CSSToolDlg : public CDialogEx
@@ -83,6 +45,7 @@ protected:
 	BOOL	m_bSendBR;
 	BOOL	m_bTimeShow;
 	UINT_PTR m_TimeHandle;
+	ParseConfigFile m_Config;
 
 	void InitCommList();
 	void ShowExtItems(BOOL bShow);
@@ -91,6 +54,7 @@ protected:
 	void RefreshComPort();
 	void ReSizeExtItems();
 	CString CommonGetCurPath(); 
+	void ReadConfig();
 	char FirstDriveFromMask (ULONG unitmask);
 	BOOL ReleaseExe(CString strFileName,WORD wResID,CString strFileType);
 	BOOL Char2Hex(TCHAR *Buffer,TCHAR *szOut,int iLen);

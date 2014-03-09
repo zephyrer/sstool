@@ -107,6 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConnPort.h" />
+    <ClInclude Include="ParseConfigFile.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SSTool.h" />
     <ClInclude Include="SSToolDlg.h" />
@@ -116,6 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConnPort.cpp" />
+    <ClCompile Include="ParseConfigFile.cpp" />
     <ClCompile Include="SSTool.cpp" />
     <ClCompile Include="SSToolDlg.cpp" />
     <ClCompile Include="SSToolEdit.cpp" />

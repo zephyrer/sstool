@@ -258,6 +258,7 @@ BOOL CSSToolDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);
 
 	InitCommList();
+	ReadConfig();
 	m_ctlMsgOut.SetLimitText(MAX_BYTES_NUM);
 	m_mSend.SetColorMode(WHITE_BACK_BLACK_FONT);
 	m_extSendMsg1.SetColorMode(WHITE_BACK_BLACK_FONT);
@@ -265,8 +266,10 @@ BOOL CSSToolDlg::OnInitDialog()
 	m_mSend.EnableMonospacedFont(TRUE);
 	m_ctlMsgOut.EnableMonospacedFont(TRUE);
 	m_sndTimer.SetWindowTextW(L"1000");
-	ShowExtItems(FALSE);
 	ReSizeMainWindow();
+	ShowExtItems(m_bExtEnable);
+	if(m_bExtEnable)
+	ReSizeExtItems();
 	return TRUE;
 }
 
@@ -1132,4 +1135,28 @@ void CSSToolDlg::OnBnClickedBtnG2()
 		return;
 	}
 	m_conn.WriteString(szSend,strWrite.GetLength());
+}
+void CSSToolDlg::ReadConfig()
+{
+	int	nQuery=0;
+
+	m_Config.GetSSToolSetting(L"COM_Port",&nQuery);
+	m_iCurConn=(nQuery-1);
+
+	nQuery=0;
+	m_Config.GetSSToolSetting(L"Baudrate",&nQuery);
+	m_iCurBaudrate=(nQuery-1);
+
+	nQuery=0;
+	m_Config.GetSSToolSetting(L"DataBit",&nQuery);
+	m_iCurDataBits=(nQuery-1);
+
+	nQuery=0;
+	m_Config.GetSSToolSetting(L"StopBit",&nQuery);
+	m_iCurStopBits=(nQuery-1);
+
+	nQuery=0;
+	m_Config.GetSSToolSetting(L"DeafultShowExtMenu",&nQuery);
+	m_bExtEnable=nQuery;
+	
 }
