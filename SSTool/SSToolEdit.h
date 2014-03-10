@@ -1,9 +1,9 @@
 #pragma once
 #include "io.h"
 
-#define BLACK_BACK_WHITE_FONT	1
-#define BLACK_BACK_GREEN_FONT	2
-#define WHITE_BACK_BLACK_FONT	3
+#define BLACK_BACK_WHITE_FONT	0
+#define BLACK_BACK_GREEN_FONT	1
+#define WHITE_BACK_BLACK_FONT	2
 
 #define MAX_LINE_SHOW		8000
 #define MAX_HEX_LINE		8000

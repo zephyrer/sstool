@@ -4,6 +4,15 @@
 
 ParseConfigFile::ParseConfigFile(void)
 {
+	int    nPos=0;  
+	m_strConfigFile.Empty();
+
+	GetModuleFileName(NULL,m_strConfigFile.GetBufferSetLength(MAX_PATH+1),MAX_PATH);   
+	m_strConfigFile.ReleaseBuffer();   
+   
+	nPos=m_strConfigFile.ReverseFind('\\');   
+	m_strConfigFile=m_strConfigFile.Left(nPos); 
+	m_strConfigFile=m_strConfigFile+L"\\"+SSToolConfigFile;
 }
 
 
@@ -11,23 +20,20 @@ ParseConfigFile::~ParseConfigFile(void)
 {
 }
 
-BOOL ParseConfigFile::GetSSToolSetting(CString strParseType,int *nResult)
+BOOL ParseConfigFile::GetSSToolSetting(CString strKeyWord,int *nResult)
 {
-	CString strConfigFile;
-	strConfigFile.Empty();
-
-   GetModuleFileName(NULL,strConfigFile.GetBufferSetLength(MAX_PATH+1),MAX_PATH);   
-   strConfigFile.ReleaseBuffer();   
-   int    nPos;   
-   nPos=strConfigFile.ReverseFind('\\');   
-   strConfigFile=strConfigFile.Left(nPos); 
-   strConfigFile=strConfigFile+L"\\"+SSToolConfigFile;
-
-   *nResult=::GetPrivateProfileInt(L"SSTool_Setting",strParseType,0,strConfigFile);
+	
+   *nResult=::GetPrivateProfileInt(L"SSTool_Setting",strKeyWord,0,m_strConfigFile);
 
    return TRUE;
 }
-void ParseConfigFile::WriteSSToolSetting(CString strParseType,int nResult)
+void ParseConfigFile::WriteSSToolSetting(CString strKeyWord,int nValue)
 {
-
+	CString strValue;
+	strValue.Format(L"%d",nValue);
+	::WritePrivateProfileString(L"SSTool_Setting",strKeyWord,strValue,m_strConfigFile); 
+}
+void ParseConfigFile::WriteSSToolSettingByString(CString strKeyWord,CString strValue)
+{
+	::WritePrivateProfileString(L"SSTool_Setting",strKeyWord,strValue,m_strConfigFile); 
 }
