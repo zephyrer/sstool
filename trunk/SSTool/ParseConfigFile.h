@@ -7,7 +7,10 @@ class ParseConfigFile
 public:
 	ParseConfigFile(void);
 	~ParseConfigFile(void);
-	BOOL GetSSToolSetting(CString strParseType,int *nResult);
-	void WriteSSToolSetting(CString strParseType,int nResult);
+	BOOL GetSSToolSetting(CString strKeyWord,int *nResult);
+	void WriteSSToolSetting(CString strKeyWord,int nValue);
+	void WriteSSToolSettingByString(CString strKeyWord,CString strValue);
+private:
+	CString m_strConfigFile;
 };
 

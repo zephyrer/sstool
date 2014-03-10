@@ -260,16 +260,27 @@ BOOL CSSToolDlg::OnInitDialog()
 	InitCommList();
 	ReadConfig();
 	m_ctlMsgOut.SetLimitText(MAX_BYTES_NUM);
+	m_ctlMsgOut.SetColorMode(m_iColorMode);
 	m_mSend.SetColorMode(WHITE_BACK_BLACK_FONT);
 	m_extSendMsg1.SetColorMode(WHITE_BACK_BLACK_FONT);
 	m_extSendMsg2.SetColorMode(WHITE_BACK_BLACK_FONT);
 	m_mSend.EnableMonospacedFont(TRUE);
 	m_ctlMsgOut.EnableMonospacedFont(TRUE);
+	m_cbBaudrate.SetCurSel(m_iCurBaudrate);
+	m_cbDataBits.SetCurSel(m_iCurDataBits);
+	((CButton *)GetDlgItem(IDC_CHECK_BR))->SetCheck(m_bSendBR);
 	m_sndTimer.SetWindowTextW(L"1000");
 	ReSizeMainWindow();
 	ShowExtItems(m_bExtEnable);
 	if(m_bExtEnable)
-	ReSizeExtItems();
+	{
+		GetDlgItem(IDC_BUTTON_EXT)->SetWindowText(L"Òþ²Ø");
+		ReSizeExtItems();
+	}
+	else
+	{
+		GetDlgItem(IDC_BUTTON_EXT)->SetWindowText(L"À©Õ¹");
+	}
 	return TRUE;
 }
 
@@ -934,6 +945,13 @@ void CSSToolDlg::ShowExtItems(BOOL bShow)
 		GetDlgItem(IDC_BTN_TIME)->ShowWindow(SW_SHOW);
 
 		GetDlgItem(IDC_STATIC_COLOR_MODE)->ShowWindow(SW_SHOW);
+		if(m_iColorMode==0)
+			((CButton *)GetDlgItem(IDC_RADIO_BW))->SetCheck(TRUE);
+		else if(m_iColorMode==1)
+			((CButton *)GetDlgItem(IDC_RADIO_BG))->SetCheck(TRUE);
+		else if(m_iColorMode==2)
+			((CButton *)GetDlgItem(IDC_RADIO_WB))->SetCheck(TRUE);
+
 		GetDlgItem(IDC_RADIO_BW)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_RADIO_BG)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_RADIO_WB)->ShowWindow(SW_SHOW);
@@ -1061,13 +1079,21 @@ void CSSToolDlg::OnBnClickedBtnTime()
 }
 void CSSToolDlg::OnClose()
 {
-	CString strPath;
-	strPath.Empty();
-	strPath=CommonGetCurPath();
-	strPath+=CACHE_FILE_NAME;
-	DeleteFile(strPath);
-	m_bSendBR=FALSE;
+	CString strTmp;
+	strTmp.Empty();
+	strTmp=CommonGetCurPath();
+	strTmp+=CACHE_FILE_NAME;
+	DeleteFile(strTmp);
+	strTmp.Empty();
+	strTmp.Format(L"%s",strBaudRate[m_iCurBaudrate]);
+	m_Config.WriteSSToolSettingByString(L"Baudrate",strTmp);
+
+	strTmp.Empty();
+	strTmp.Format(L"%s",strDataBits[m_iCurDataBits]);
+	m_Config.WriteSSToolSettingByString(L"DataBit",strTmp);
+	m_Config.WriteSSToolSetting(L"EnableBRsend",(int)m_bSendBR);
 	CDialogEx::OnClose();
+	
 }
 
 void CSSToolDlg::OnBnClickedCheckBr()
@@ -1098,16 +1124,19 @@ HBRUSH CSSToolDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 void CSSToolDlg::OnBnClickedRadioBw()
 {
 	m_ctlMsgOut.SetColorMode(BLACK_BACK_WHITE_FONT);
+	m_Config.WriteSSToolSetting(L"ColorMode",BLACK_BACK_WHITE_FONT);
 }
 
 void CSSToolDlg::OnBnClickedRadioBg()
 {
 	m_ctlMsgOut.SetColorMode(BLACK_BACK_GREEN_FONT);
+	m_Config.WriteSSToolSetting(L"ColorMode",BLACK_BACK_GREEN_FONT);
 }
 
 void CSSToolDlg::OnBnClickedRadioWb()
 {
 	m_ctlMsgOut.SetColorMode(WHITE_BACK_BLACK_FONT);
+	m_Config.WriteSSToolSetting(L"ColorMode",WHITE_BACK_BLACK_FONT);
 }
 
 void CSSToolDlg::OnBnClickedBtnG1()
@@ -1139,24 +1168,69 @@ void CSSToolDlg::OnBnClickedBtnG2()
 void CSSToolDlg::ReadConfig()
 {
 	int	nQuery=0;
-
-	m_Config.GetSSToolSetting(L"COM_Port",&nQuery);
-	m_iCurConn=(nQuery-1);
-
-	nQuery=0;
 	m_Config.GetSSToolSetting(L"Baudrate",&nQuery);
-	m_iCurBaudrate=(nQuery-1);
-
+	switch((nQuery/100))
+	{
+	case 2560:
+		m_iCurBaudrate=13;
+		break;
+	case 1280:
+		m_iCurBaudrate=12;
+		break;
+	case 1152:
+		m_iCurBaudrate=11;
+		break;
+	case 576:
+		m_iCurBaudrate=10;
+		break;
+	case 384:
+		m_iCurBaudrate=9;
+		break;
+	case 192:
+		m_iCurBaudrate=8;
+		break;
+	case 144:
+		m_iCurBaudrate=7;
+		break;
+	case 96:
+		m_iCurBaudrate=6;
+		break;
+	case 48:
+		m_iCurBaudrate=5;
+		break;
+	case 24:
+		m_iCurBaudrate=4;
+		break;
+	case 12:
+		m_iCurBaudrate=3;
+		break;
+	case 6:
+		m_iCurBaudrate=2;
+		break;
+	case 3:
+		m_iCurBaudrate=1;
+		break;
+	case 1:
+		m_iCurBaudrate=0;
+		break;
+	default:
+		m_iCurBaudrate=11;
+		break;
+	}
 	nQuery=0;
 	m_Config.GetSSToolSetting(L"DataBit",&nQuery);
-	m_iCurDataBits=(nQuery-1);
-
-	nQuery=0;
-	m_Config.GetSSToolSetting(L"StopBit",&nQuery);
-	m_iCurStopBits=(nQuery-1);
+	m_iCurDataBits=(nQuery-6);
 
 	nQuery=0;
 	m_Config.GetSSToolSetting(L"DeafultShowExtMenu",&nQuery);
 	m_bExtEnable=nQuery;
+
+	nQuery=0;
+	m_Config.GetSSToolSetting(L"ColorMode",&nQuery);
+	m_iColorMode=nQuery;
+
+	nQuery=0;
+	m_Config.GetSSToolSetting(L"EnableBRsend",&nQuery);
+	m_bSendBR=nQuery;
 	
 }

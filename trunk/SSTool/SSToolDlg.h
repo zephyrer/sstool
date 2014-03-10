@@ -37,6 +37,7 @@ protected:
 	int	  m_iCurStopBits;
 	int	  m_iCurParity;
 	int   m_iComCounts;
+	int   m_iColorMode;
 	CString	m_strCaption;
 	CString m_strTimeSotre;
 	CString m_strCache;
