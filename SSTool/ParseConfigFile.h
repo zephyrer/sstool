@@ -8,5 +8,6 @@ public:
 	ParseConfigFile(void);
 	~ParseConfigFile(void);
 	BOOL GetSSToolSetting(CString strParseType,int *nResult);
+	void WriteSSToolSetting(CString strParseType,int nResult);
 };
 
