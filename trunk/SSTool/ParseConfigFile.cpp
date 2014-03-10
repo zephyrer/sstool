@@ -27,3 +27,7 @@ BOOL ParseConfigFile::GetSSToolSetting(CString strParseType,int *nResult)
 
    return TRUE;
 }
+void ParseConfigFile::WriteSSToolSetting(CString strParseType,int nResult)
+{
+
+}
