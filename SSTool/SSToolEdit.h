@@ -5,7 +5,7 @@
 #define BLACK_BACK_GREEN_FONT	1
 #define WHITE_BACK_BLACK_FONT	2
 
-#define MAX_LINE_SHOW		8000
+#define MAX_LINE_SHOW		3000
 #define MAX_HEX_LINE		8000
 #define CACHE_FILE_NAME		L"\\sstool_cache.txt"
 
@@ -18,6 +18,7 @@ public:
 	virtual ~CSSToolEdit();
 	void SetColorMode(int nMode);
 	void OutMsg(CString strMsg,BOOL bEnableHex=FALSE);
+	void WriteMessage(CString strMsg,BOOL bEnableHex=FALSE);
 	void ClearData();
 	void EnableMonospacedFont(BOOL bEnable);
 	BOOL SaveDataToFile();
