@@ -457,11 +457,11 @@ void CSSToolDlg::OnBnClickedButtonSend()
 	szSend=strWrite.GetBuffer(strWrite.GetLength());
 	if(strWrite.IsEmpty())
 	{
-		m_conn.WriteString(L"\n",1);
+		m_conn.WriteString(L"\r\n",2);
 	}
 	m_conn.WriteString(szSend,strWrite.GetLength());
 	if(TRUE==m_bSendBR)
-		m_conn.WriteString(L"\n",1);
+		m_conn.WriteString(L"\r\n",2);
 	if(!m_TimeSend)
 	m_mSend.SetWindowTextW(L"");
 	
@@ -1092,6 +1092,7 @@ void CSSToolDlg::OnClose()
 	strTmp.Format(L"%s",strDataBits[m_iCurDataBits]);
 	m_Config.WriteSSToolSettingByString(L"DataBit",strTmp);
 	m_Config.WriteSSToolSetting(L"EnableBRsend",(int)m_bSendBR);
+	m_Config.WriteSSToolSetting(L"DeafultShowExtMenu",(int)m_bExtEnable);
 	CDialogEx::OnClose();
 	
 }

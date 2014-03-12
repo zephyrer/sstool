@@ -15,7 +15,7 @@ CSSToolEdit::CSSToolEdit()
     m_bkColor  =	RGB(31,31,31);
     m_bkBrush.CreateSolidBrush( RGB(31,31,31) );
 	m_RecieveData = L"";
-	m_showFont.CreateFont(15,7,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"DejaVu Sans Mono");
+	m_showFont.CreateFont(15,8,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"ÐÂËÎÌå");
 }
 
 CSSToolEdit::~CSSToolEdit()
@@ -151,6 +151,56 @@ void  CSSToolEdit::OutMsg(CString strMsg,BOOL bEnableHex)
 
 	m_RecieveData+=strMsg;
 }
+
+void  CSSToolEdit::WriteMessage(CString strMsg,BOOL bEnableHex)
+{
+	int iLen=0;
+	char szbuf[MAX_PATH];
+	CString strPath;
+	if(this->GetLineCount()>((bEnableHex==TRUE)?MAX_HEX_LINE:MAX_LINE_SHOW))
+	{
+		CFile m_CCacheFile;
+		EnterWorkPath();
+		strPath.Empty();
+		strPath=AppGetCurPath();
+		strPath+=CACHE_FILE_NAME;
+		sprintf(szbuf,"%s",strPath);
+		if((access(szbuf,0)==-1))
+		{
+			if(!m_CCacheFile.Open(strPath,CFile::modeCreate| CFile::modeWrite|CFile::modeNoTruncate))
+			{
+				AfxMessageBox(L"»º´æÊ§°Ü£¡");
+				return;
+			}
+			DWORD FileAttr = GetFileAttributes(strPath);
+			SetFileAttributes(strPath,FileAttr | FILE_ATTRIBUTE_HIDDEN);
+		}
+		else
+		{
+			if(!m_CCacheFile.Open(strPath,CFile::modeWrite|CFile::modeNoTruncate))
+			{
+				AfxMessageBox(L"»º´æÊ§°Ü£¡");
+				return;
+			}
+		}
+		m_CCacheFile.SeekToEnd();
+		m_CCacheFile.Write((LPCTSTR)m_RecieveData,m_RecieveData.GetLength()*sizeof(TCHAR));
+
+		m_CCacheFile.Flush();
+		m_CCacheFile.Close();
+
+		m_RecieveData.Empty();
+		this->SetSel(0,-1);
+		this->ReplaceSel(L" ");
+	}
+	iLen=this->GetWindowTextLengthW();
+	this->SetSel(iLen,iLen);
+	this->ReplaceSel((LPCTSTR)strMsg);
+	iLen+=strMsg.GetLength();
+
+	m_RecieveData+=strMsg;
+}
+
 void CSSToolEdit::ClearData()
 {
 	CString strPath;
