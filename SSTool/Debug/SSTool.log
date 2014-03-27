@@ -1,16 +1,38 @@
-﻿Build started 2014/3/9 23:34:57.
+﻿Build started 2014/3/27 23:56:15.
      1>Project "E:\study\vc_project\SSTool\SSTool\SSTool.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
-         Touching "Debug\SSTool.unsuccessfulbuild".
+         Creating "Debug\SSTool.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
          All outputs are up-to-date.
-         d:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\SSTool.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt SSToolDlg.cpp
+         d:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\SSTool.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ConnPort.cpp SSTool.cpp SSToolDlg.cpp SSToolEdit.cpp
+         SSToolEdit.cpp
+     1>e:\study\vc_project\sstool\sstool\sstooledit.cpp(116): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
+     1>e:\study\vc_project\sstool\sstool\sstooledit.cpp(117): warning C4996: 'access': The POSIX name for this item is deprecated. Instead, use the ISO C++ conformant name: _access. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\io.h(299) : see declaration of 'access'
+     1>e:\study\vc_project\sstool\sstool\sstooledit.cpp(165): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
+     1>e:\study\vc_project\sstool\sstool\sstooledit.cpp(166): warning C4996: 'access': The POSIX name for this item is deprecated. Instead, use the ISO C++ conformant name: _access. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\io.h(299) : see declaration of 'access'
+     1>e:\study\vc_project\sstool\sstool\sstooledit.cpp(235): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
+         Generating Code...
+         Compiling...
          SSToolDlg.cpp
-     1>e:\study\vc_project\sstool\sstool\sstooldlg.cpp(475): warning C4995: 'wsprintf': name was marked as #pragma deprecated
-     1>e:\study\vc_project\sstool\sstool\sstooldlg.cpp(475): warning C4995: 'wsprintfW': name was marked as #pragma deprecated
-     1>e:\study\vc_project\sstool\sstool\sstooldlg.cpp(476): warning C4995: 'wcscat': name was marked as #pragma deprecated
-     1>e:\study\vc_project\sstool\sstool\sstooldlg.cpp(476): warning C4996: 'wcscat': This function or variable may be unsafe. Consider using wcscat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>e:\study\vc_project\sstool\sstool\sstooldlg.cpp(486): warning C4995: 'wsprintf': name was marked as #pragma deprecated
+     1>e:\study\vc_project\sstool\sstool\sstooldlg.cpp(486): warning C4995: 'wsprintfW': name was marked as #pragma deprecated
+     1>e:\study\vc_project\sstool\sstool\sstooldlg.cpp(487): warning C4995: 'wcscat': name was marked as #pragma deprecated
+     1>e:\study\vc_project\sstool\sstool\sstooldlg.cpp(487): warning C4996: 'wcscat': This function or variable may be unsafe. Consider using wcscat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  d:\program files\microsoft visual studio 10.0\vc\include\string.h(276) : see declaration of 'wcscat'
+         SSTool.cpp
+         ConnPort.cpp
+     1>e:\study\vc_project\sstool\sstool\connport.cpp(293): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
+     1>e:\study\vc_project\sstool\sstool\connport.cpp(455): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\stdio.h(371) : see declaration of 'sprintf'
+     1>e:\study\vc_project\sstool\sstool\connport.cpp(456): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\program files\microsoft visual studio 10.0\vc\include\string.h(110) : see declaration of 'strcat'
+         Generating Code...
        ResourceCompile:
          All outputs are up-to-date.
        ManifestResourceCompile:
@@ -37,4 +59,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:02.87
+Time Elapsed 00:00:05.73

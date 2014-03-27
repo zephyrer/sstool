@@ -5,8 +5,6 @@
 #include "SSTool.h"
 #include "SSToolEdit.h"
 
-// CSSToolEdit
-
 IMPLEMENT_DYNAMIC(CSSToolEdit, CEdit)
 
 CSSToolEdit::CSSToolEdit()
@@ -15,15 +13,15 @@ CSSToolEdit::CSSToolEdit()
     m_bkColor  =	RGB(31,31,31);
     m_bkBrush.CreateSolidBrush( RGB(31,31,31) );
 	m_RecieveData = L"";
-	m_showFont.CreateFont(15,8,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"新宋体");
+	m_showFont.CreateFont(15,9,0,0,100,FALSE,FALSE,0,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Courier New");
 }
-
 CSSToolEdit::~CSSToolEdit()
 {
 
 }
 BEGIN_MESSAGE_MAP(CSSToolEdit, CEdit)
 	ON_WM_CTLCOLOR_REFLECT()
+	ON_WM_LBUTTONDOWN()
 END_MESSAGE_MAP()
 
 
@@ -207,7 +205,7 @@ void CSSToolEdit::ClearData()
 	strPath.Empty();
 	m_RecieveData.Empty();
 	this->SetSel(0,-1);
-	this->ReplaceSel(L" ");
+	this->ReplaceSel(L"");
 
 	strPath=AppGetCurPath();
 	strPath+=CACHE_FILE_NAME;
@@ -269,4 +267,11 @@ BOOL CSSToolEdit::SaveDataToFile()
 	MessageBox(_T("已保存!"),NULL, MB_OK);
 
 	return TRUE;
+}
+
+void CSSToolEdit::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	CEdit::OnLButtonDown(nFlags, point);
 }

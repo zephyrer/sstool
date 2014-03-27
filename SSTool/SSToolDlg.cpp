@@ -784,6 +784,14 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 					{
 						m_conn.WriteByte(0x2E);
 					}
+					else if(pMsg->wParam==VK_OEM_2)
+					{
+						if((GetAsyncKeyState( VK_SHIFT) & 0x8000))
+							m_conn.WriteByte(0x3F);
+						else
+							m_conn.WriteByte(0x2F);
+						return 1;
+					}
 					else
 					{
 						m_conn.WriteByte(pMsg->wParam);

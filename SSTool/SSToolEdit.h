@@ -5,7 +5,7 @@
 #define BLACK_BACK_GREEN_FONT	1
 #define WHITE_BACK_BLACK_FONT	2
 
-#define MAX_LINE_SHOW		3000
+#define MAX_LINE_SHOW		5000
 #define MAX_HEX_LINE		8000
 #define CACHE_FILE_NAME		L"\\sstool_cache.txt"
 
@@ -33,6 +33,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg HBRUSH CtlColor(CDC* /*pDC*/, UINT /*nCtlColor*/);
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 };
 
 
