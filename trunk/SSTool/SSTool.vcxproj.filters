@@ -35,9 +35,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="res\SCTool.exe" />
-    <None Include="res\exe2.bin">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SSTool.h">
