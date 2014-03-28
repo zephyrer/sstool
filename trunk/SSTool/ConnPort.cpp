@@ -3,7 +3,7 @@
 #include "SSToolDlg.h"
 #include "string.h"
 
-#define     MAX_BUFFER_SIZE   512
+#define     MAX_BUFFER_SIZE   1024
 #define		MAX_SEND_SIZE	  256
 volatile int			g_iExitFlag=0;
 static	 int			g_wExitFlag=0;
