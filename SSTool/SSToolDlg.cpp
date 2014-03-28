@@ -783,6 +783,7 @@ BOOL CSSToolDlg::PreTranslateMessage(MSG* pMsg)
 					else if(pMsg->wParam==190)
 					{
 						m_conn.WriteByte(0x2E);
+						return 1;
 					}
 					else if(pMsg->wParam==VK_OEM_2)
 					{
