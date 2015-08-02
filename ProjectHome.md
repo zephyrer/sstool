@@ -1,0 +1,1 @@
+SSTool is a simple serial tool based on MFC!
